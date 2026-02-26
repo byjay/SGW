@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { Login } from './components/Login';
 import { Board } from './components/Board';
@@ -11,7 +12,7 @@ import { Home } from './components/Home';
 import { MailView } from './components/MailView';
 import { User, ViewState, Post } from './types';
 import { MockServer } from './services/mockServer';
-import { Megaphone, X, MessageSquare } from 'lucide-react';
+import { Megaphone, X, MessageSquare, Calendar as CalendarIcon } from 'lucide-react';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -73,7 +74,7 @@ function App() {
       if (!showNoticeModal) { // Don't check if modal is already open
           const notices = await MockServer.getNewNotices(currentUser.id);
           if (notices.length > 0) {
-              setNewNotice(notices[0]); // Show the most recent one
+              setNewNotice(notices[0]); // Show most recent one
               setShowNoticeModal(true);
           }
       }
@@ -131,7 +132,7 @@ function App() {
     // Run interval
     const interval = setInterval(tick, 3000); // 3 second loop for responsiveness
     return () => clearInterval(interval);
-  }, [currentUser, showNoticeModal]);
+  }, [currentUser, showNoticeModal, showLeaveModal, showMessageModal, showApprovalModal]);
 
   const handleLogin = async (user: User) => {
     setCurrentUser(user);
@@ -202,7 +203,8 @@ function App() {
   };
 
   return (
-    <>
+    <ErrorBoundary>
+      <>
         <Layout
         currentUser={currentUser}
         currentView={currentView}
@@ -324,7 +326,7 @@ function App() {
                             <MessageSquare size={120} />
                         </div>
                         <div className="relative z-10">
-                            <div className="inline-flex items-center space-x-2 bg-emerald-600/50 rounded-full px-3 py-1 mb-3 text-xs font-bold border border-emerald-400">
+                            <div className="inline-flex items-center space-x-2 bg-emerald-600/50 rounded-full px-3 py-1 mb-3 text-xs font-bold border-emerald-400">
                                 <MessageSquare size={12} />
                                 <span>새로운 쪽지</span>
                             </div>
@@ -365,7 +367,7 @@ function App() {
                             <MessageSquare size={120} />
                         </div>
                         <div className="relative z-10">
-                            <div className="inline-flex items-center space-x-2 bg-blue-700/50 rounded-full px-3 py-1 mb-3 text-xs font-bold border border-blue-500">
+                            <div className="inline-flex items-center space-x-2 bg-blue-700/50 rounded-full px-3 py-1 mb-3 text-xs font-bold border-blue-500">
                                 <MessageSquare size={12} />
                                 <span>새로운 결재</span>
                             </div>
@@ -395,7 +397,8 @@ function App() {
                 </div>
             </div>
         )}
-    </>
+      </>
+    </ErrorBoundary>
   );
 }
 
