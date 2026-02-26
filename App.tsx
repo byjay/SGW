@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ErrorBoundary } from './components/ErrorBoundary';
+
 import { Layout } from './components/Layout';
 import { Login } from './components/Login';
 import { Board } from './components/Board';
@@ -203,7 +203,7 @@ function App() {
   };
 
   return (
-    <ErrorBoundary>
+    
       <>
         <Layout
         currentUser={currentUser}
@@ -398,7 +398,7 @@ function App() {
             </div>
         )}
       </>
-    </ErrorBoundary>
+    
   );
 }
 

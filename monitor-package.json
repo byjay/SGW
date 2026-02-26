@@ -1,0 +1,14 @@
+{
+  "name": "auto-monitor-deploy",
+  "version": "1.0.0",
+  "description": "파일 변경 감지 및 자동 배포 스크립트",
+  "main": "monitor.js",
+  "scripts": {
+    "start": "node monitor.js",
+    "deploy": "node monitor.js --deploy-only"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "axios": "^1.6.7"
+  }
+}
