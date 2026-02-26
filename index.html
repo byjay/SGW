@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Community Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --sat: env(safe-area-inset-top);
+        --sab: env(safe-area-inset-bottom);
+        --sal: env(safe-area-inset-left);
+        --sar: env(safe-area-inset-right);
+      }
+
+      body {
+        font-family: 'Noto Sans KR', sans-serif;
+        /* Disable text selection like a native app */
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        /* Disable tap highlight color */
+        -webkit-tap-highlight-color: transparent;
+        /* Prevent bounce scroll on body */
+        overscroll-behavior-y: none;
+        background-color: #f8fafc; /* Match slate-50 */
+      }
+
+      /* Allow text selection in inputs and textareas */
+      input, textarea {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+
+      /* Safe area padding for notched phones */
+      .safe-area-top {
+        padding-top: var(--sat);
+      }
+      .safe-area-bottom {
+        padding-bottom: var(--sab);
+      }
+
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fade-in 0.3s ease-out forwards;
+      }
+
+      /* Hide scrollbar for cleaner UI */
+      .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+      }
+      .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "@react-oauth/google": "https://esm.sh/@react-oauth/google@0.12.1",
+    "jwt-decode": "https://esm.sh/jwt-decode@4.0.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "name": "그룹웨어",
+  "description": "A simulated community platform featuring a public bulletin board and private messaging system with user switching capabilities.",
+  "requestFramePermissions": []
+}
