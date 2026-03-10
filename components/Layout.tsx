@@ -250,6 +250,11 @@ export const Layout: React.FC<LayoutProps> = ({
             <LogOut size={16} />
             <span>로그아웃</span>
           </button>
+          <div className="mt-4 px-4 pt-4 border-t border-slate-100/50">
+            <p className="text-[10px] text-slate-400">
+              개발자: <a href="mailto:designsir@seastargo.com" className="text-blue-500 hover:text-blue-600 font-medium">designsir@seastargo.com</a>
+            </p>
+          </div>
         </div>
       </aside>
 
@@ -309,6 +314,11 @@ export const Layout: React.FC<LayoutProps> = ({
               <LogOut size={18} />
               <span>로그아웃</span>
             </button>
+            <div className="mt-6 px-4 pt-6 border-t border-slate-100 text-center">
+              <p className="text-xs text-slate-400 font-medium">
+                개발자: <a href="mailto:designsir@seastargo.com" className="text-blue-600 hover:text-blue-700">designsir@seastargo.com</a>
+              </p>
+            </div>
           </div>
           <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4 p-2 text-slate-500">
             <X size={24} />
@@ -317,20 +327,11 @@ export const Layout: React.FC<LayoutProps> = ({
       )}
 
       {/* Main Content Area */}
-      <main className={`flex-1 md:ml-64 p-4 md:p-8 overflow-y-auto ${currentUser ? 'pb-24 md:pb-8' : ''} h-[calc(100vh-64px)] md:h-screen bg-slate-50/50`}>
+      <main className={`flex-1 md:ml-64 p-4 md:p-8 overflow-y-auto ${currentUser ? 'pb-24' : ''} h-[calc(100vh-64px)] md:h-screen bg-slate-50/50`}>
         <div className="max-w-7xl mx-auto h-full">
           {children}
         </div>
       </main>
-
-      {/* Footer (Desktop only) */}
-      <footer className="hidden md:block bg-white border-t border-slate-200 py-4 px-4 md:px-8">
-        <div className="max-w-7xl mx-auto text-center md:text-right">
-          <p className="text-sm text-slate-600">
-            개발자: <a href="mailto:designsir@seastargo.com" className="text-blue-600 hover:text-blue-700 font-medium">designsir@seastargo.com</a>
-          </p>
-        </div>
-      </footer>
 
       {/* Password Change Modal */}
       {showPasswordModal && (
