@@ -191,13 +191,26 @@ export const Home: React.FC<HomeProps> = ({ currentUser, onNavigate, unreadCount
         <div className="animate-fade-in space-y-4 md:space-y-8 relative">
             <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
 
-                {/* Mail Card */}
+                {/* Leave Management Card - MOVED TO TOP */}
+                <Card
+                    title="연차 신청"
+                    icon={Calendar}
+                    colorClass="text-pink-600"
+                    bgClass="bg-pink-100"
+                    onClick={() => onNavigate('leave')}
+                >
+                    <div className="flex flex-col items-center justify-center h-24">
+                        <p className="text-xs text-slate-500">휴가/반차 신청</p>
+                    </div>
+                </Card>
+
+                {/* Mail Card - Updated to open in new window */}
                 <Card
                     title="사내 메일"
                     icon={Mail}
                     colorClass="text-indigo-600"
                     bgClass="bg-indigo-100"
-                    onClick={() => onNavigate('mail')}
+                    onClick={() => window.open('https://m193.mailplug.com/member/login', '_blank')}
                 >
                     <div className="flex flex-col items-center justify-center h-24">
                         {unreadCount > 0 && (
@@ -209,7 +222,7 @@ export const Home: React.FC<HomeProps> = ({ currentUser, onNavigate, unreadCount
                     </div>
                 </Card>
 
-                {/* Attendance Card */}
+                {/* Attendance Card - RESTORED */}
                 <Card
                     title="출퇴근 관리"
                     icon={Clock}
@@ -221,19 +234,6 @@ export const Home: React.FC<HomeProps> = ({ currentUser, onNavigate, unreadCount
                         <p className="text-xl font-bold text-slate-800 tracking-tight">
                             {attendance.clockIn ? new Date(attendance.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '00:00'}
                         </p>
-                    </div>
-                </Card>
-
-                {/* Leave Management Card */}
-                <Card
-                    title="연차 신청"
-                    icon={Calendar}
-                    colorClass="text-pink-600"
-                    bgClass="bg-pink-100"
-                    onClick={() => onNavigate('leave')}
-                >
-                    <div className="flex flex-col items-center justify-center h-24">
-                        <p className="text-xs text-slate-500">휴가/반차 신청</p>
                     </div>
                 </Card>
 

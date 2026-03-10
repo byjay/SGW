@@ -191,9 +191,25 @@ export const MobileHome: React.FC<MobileHomeProps> = ({ currentUser, onNavigate,
             <span className="h-1 w-1 bg-slate-400 rounded-full"></span>
           </h3>
           <div className="grid grid-cols-2 gap-4">
-            {/* Feature 1: Mail */}
+            {/* Feature 1: Leave - MOVED TO TOP */}
             <div
-              onClick={() => handleNavigate('mail')}
+              onClick={() => handleNavigate('leave')}
+              className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-4 hover:border-purple-500/30 transition-all cursor-pointer group"
+            >
+              <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-500 rounded-xl flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-bold text-slate-900 dark:text-slate-100">연차 신청</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">휴가/반차 신청</p>
+              </div>
+            </div>
+
+            {/* Feature 2: Mail - Updated to window.open */}
+            <div
+              onClick={() => window.open('https://m193.mailplug.com/member/login', '_blank')}
               className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-4 hover:border-[#135bec]/30 transition-all cursor-pointer group"
             >
               <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-[#135bec] rounded-xl flex items-center justify-center group-hover:bg-[#135bec] group-hover:text-white transition-colors">
@@ -212,7 +228,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({ currentUser, onNavigate,
               </div>
             </div>
 
-            {/* Feature 2: Attendance */}
+            {/* Feature 3: Attendance */}
             <div
               onClick={openAttendanceModal}
               className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-4 hover:border-orange-500/30 transition-all cursor-pointer group"
@@ -227,22 +243,6 @@ export const MobileHome: React.FC<MobileHomeProps> = ({ currentUser, onNavigate,
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {attendance.clockIn ? new Date(attendance.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '00:00'}
                 </p>
-              </div>
-            </div>
-
-            {/* Feature 3: Leave */}
-            <div
-              onClick={() => handleNavigate('leave')}
-              className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-4 hover:border-purple-500/30 transition-all cursor-pointer group"
-            >
-              <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-500 rounded-xl flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <p className="font-bold text-slate-900 dark:text-slate-100">연차 신청</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">휴가/반차 신청</p>
               </div>
             </div>
 

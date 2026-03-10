@@ -114,16 +114,23 @@ export const Layout: React.FC<LayoutProps> = ({
       <div className="pt-4 pb-2">
         <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">소통 및 알림</p>
       </div>
-      <NavItem view="mail" icon={Mail} label="사내 메일" />
+      <button
+        onClick={() => window.open('https://m193.mailplug.com/member/login', '_blank')}
+        className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-100 transition-all duration-200"
+      >
+        <Mail size={20} />
+        <span className="font-medium">사내 메일</span>
+        <ExternalLink size={14} className="ml-auto opacity-50" />
+      </button>
       <NavItem view="board" icon={LayoutGrid} label="게시판" />
       <NavItem view="messages" icon={MessageSquare} label="쪽지함 (조직도)" badge={unreadCount > 0 ? unreadCount : undefined} />
 
       <div className="pt-4 pb-2">
         <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">업무 관리</p>
       </div>
+      <NavItem view="leave" icon={Calendar} label="연차 신청" />
       <NavItem view="calendar" icon={CalendarIcon} label="일정 캘린더" />
       <NavItem view="approval" icon={FileCheck} label="전자 결재" />
-      <NavItem view="leave" icon={Calendar} label="연차 신청" />
 
       {/* Only Kim Bongjung (ID: 5) and Lee Seon-woo (ID: 2) can see admin menu */}
       {['2', '5'].includes(currentUser.id) && (
@@ -151,7 +158,7 @@ export const Layout: React.FC<LayoutProps> = ({
               <span className="text-[10px] font-extrabold">홈</span>
             </button>
             <button
-              onClick={() => onNavigate('mail')}
+              onClick={() => window.open('https://m193.mailplug.com/member/login', '_blank')}
               className={`flex flex-col items-center gap-1 flex-1 ${currentView === 'mail' ? 'text-[#135bec]' : 'text-slate-400'} transition-colors`}
             >
               <Mail className="w-5 h-5" fill={currentView === 'mail' ? 'currentColor' : 'none'} />
