@@ -420,7 +420,12 @@ export const LeaveManagement: React.FC<LeaveManagementProps> = ({ currentUser })
                         const isToday = new Date().toDateString() === d.toDateString();
 
                         return (
-                            <div key={idx} className={`p-1 border-b border-r border-slate-100 relative ${isToday ? 'bg-blue-50/30' : ''}`}>
+                            <div
+                                key={idx}
+                                onDoubleClick={() => handleDateClick(d)}
+                                title="더블클릭하여 이 날짜에 연차 신청"
+                                className={`p-1 border-b border-r border-slate-100 relative cursor-pointer hover:bg-slate-50 transition-colors ${isToday ? 'bg-blue-50/30' : ''}`}
+                            >
                                 <span className={`text-[10px] md:text-xs font-bold ${d.getDay() === 0 ? 'text-red-500' : d.getDay() === 6 ? 'text-blue-500' : 'text-slate-700'} ${isToday ? 'bg-blue-600 text-white w-4 h-4 md:w-5 md:h-5 flex items-center justify-center rounded-full' : ''}`}>
                                     {d.getDate()}
                                 </span>
