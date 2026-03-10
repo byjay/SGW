@@ -42,6 +42,35 @@ function App() {
     const [newApproval, setNewApproval] = useState<any | null>(null);
     const [showApprovalModal, setShowApprovalModal] = useState(false);
 
+    // Native Notification Permission
+    const requestNotificationPermission = useCallback(async () => {
+        if (!('Notification' in window)) return;
+        if (Notification.permission === 'default') {
+            await Notification.requestPermission();
+        }
+    }, []);
+
+    const sendNativeNotification = useCallback((title: string, body: string, url: string = '/') => {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+        try {
+            const options = {
+                body: body,
+                icon: '/sgws_logo_custom.png',
+                badge: '/sgws_logo_custom.png',
+                tag: 'sgw-notification',
+                renotify: true
+            };
+            const n = new Notification(title, options);
+            n.onclick = () => {
+                window.focus();
+                n.close();
+            };
+        } catch (e) {
+            console.error('Native notification error:', e);
+        }
+    }, []);
+
     useEffect(() => {
         // Initialize mock data
         MockServer.init();
@@ -81,6 +110,7 @@ function App() {
                 if (notices.length > 0) {
                     setNewNotice(notices[0]); // Show most recent one
                     setShowNoticeModal(true);
+                    sendNativeNotification('📢 새로운 공지사항', notices[0].title);
                 }
             }
 
@@ -96,6 +126,7 @@ function App() {
                     if (newestRequest.requestDate > lastSeenTime) {
                         setNewLeaveRequest(newestRequest);
                         setShowLeaveModal(true);
+                        sendNativeNotification('📅 새로운 연차 신청', `${newestRequest.userName}님의 연차 신청이 있습니다.`);
                     }
                 }
             }
@@ -111,6 +142,7 @@ function App() {
                     if (newestMsg.timestamp > lastSeenMsgTime) {
                         setNewMessage(newestMsg);
                         setShowMessageModal(true);
+                        sendNativeNotification(`💬 ${newestMsg.senderName}님의 쪽지`, newestMsg.content);
                     }
                 }
             }
@@ -126,6 +158,7 @@ function App() {
                     if (newestApproval.createdAt > lastSeenApprovalTime) {
                         setNewApproval(newestApproval);
                         setShowApprovalModal(true);
+                        sendNativeNotification('📑 새로운 결재 요청', newestApproval.title);
                     }
                 }
             }
@@ -147,6 +180,7 @@ function App() {
         setCurrentUser(user);
         localStorage.setItem('current_user_id', user.id);
         await MockServer.heartbeat(user.id); // Immediate heartbeat
+        requestNotificationPermission(); // Request permission on login
         setCurrentView('home');
     };
 
