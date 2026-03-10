@@ -1,9 +1,9 @@
 export interface User {
   id: string;
   name: string;
+  email: string;  // 로그인용 이메일 (seastargo.com 도메인)
   avatar: string;
-  email?: string;
-  role: 'admin' | 'user' | 'manager' | 'engineer' | 'viewer' | 'guest'; // Expanded roles based on data
+  role: 'admin' | 'user' | 'manager' | 'engineer' | 'viewer' | 'guest';
   projectScope?: string;
   status?: 'active' | 'pending' | 'suspended';
   phone?: string;
@@ -14,6 +14,8 @@ export interface User {
   carryover?: number;
   leaveBalance?: number;
   password?: string;
+  passwordChanged?: boolean;
+  passwordChangeCount?: number;
 }
 
 export interface Comment {
@@ -35,7 +37,6 @@ export interface Post {
   type: 'notice' | 'normal';
   comments: Comment[];
 }
-
 export interface Message {
   id: string;
   senderId: string;
@@ -76,7 +77,7 @@ export interface LeaveRequest {
   days: number;
   reason: string;
   emergencyContact: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'pending_approval' | 'pending_delete';
   requestDate: number;
 }
 
@@ -102,6 +103,44 @@ export interface AttendanceLog {
   location: string;
 }
 
+export interface LoginHistory {
+  id: string;
+  userId: string;
+  userName: string;
+  email: string;  // 이메일 기반 로그인
+  type: 'login' | 'logout';
+  timestamp: number;
+  deviceInfo: string;  // 기기 정보
+  ipAddress: string;
+  status: 'success' | 'failed' | 'blocked';
+  failureReason?: string;
+}
+
+export interface PasswordResetLog {
+  id: string;
+  targetUserId: string;
+  targetUserName: string;
+  targetEmail: string;
+  requesterId: string;
+  requesterName: string;
+  requesterRole: string;
+  resetDate: number;
+  ipAddress: string;
+  deviceInfo: string;
+  wasSuccessful: boolean;
+  reason?: string;
+}
+
+export interface DeviceInfo {
+  isMobile: boolean;
+  isTablet: boolean;
+  isDesktop: boolean;
+  userAgent: string;
+  platform: string;
+}
+
+export type ViewState = 'login' | 'home' | 'board' | 'messages' | 'chat' | 'leave' | 'approval' | 'admin' | 'calendar' | 'mail';
+
 export interface Schedule {
   id: string;
   userId: string;
@@ -113,5 +152,3 @@ export interface Schedule {
   isAllDay: boolean;
   color?: string;
 }
-
-export type ViewState = 'login' | 'home' | 'board' | 'messages' | 'chat' | 'leave' | 'approval' | 'admin' | 'calendar' | 'mail';
