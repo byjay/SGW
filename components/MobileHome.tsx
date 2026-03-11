@@ -194,16 +194,16 @@ export const MobileHome: React.FC<MobileHomeProps> = ({ currentUser, onNavigate,
             {/* Feature 1: Leave - MOVED TO TOP */}
             <div
               onClick={() => handleNavigate('leave')}
-              className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-4 hover:border-purple-500/30 transition-all cursor-pointer group"
+              className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-3 sm:gap-4 hover:border-purple-500/30 transition-all cursor-pointer group"
             >
-              <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-500 rounded-xl flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-500 rounded-xl flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <div>
-                <p className="font-bold text-slate-900 dark:text-slate-100">연차 신청</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">휴가/반차 신청</p>
+              <div className="w-full">
+                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base break-keep line-clamp-2">연차 신청</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 break-keep line-clamp-2 mt-0.5">휴가/반차 신청</p>
               </div>
             </div>
 
@@ -212,16 +212,16 @@ export const MobileHome: React.FC<MobileHomeProps> = ({ currentUser, onNavigate,
             {/* Feature 3: Attendance */}
             <div
               onClick={openAttendanceModal}
-              className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-4 hover:border-orange-500/30 transition-all cursor-pointer group"
+              className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-3 sm:gap-4 hover:border-orange-500/30 transition-all cursor-pointer group"
             >
-              <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-500 rounded-xl flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-colors">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-500 rounded-xl flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div>
-                <p className="font-bold text-slate-900 dark:text-slate-100">출퇴근 관리</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+              <div className="w-full">
+                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base break-keep line-clamp-2">출퇴근 관리</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 break-keep line-clamp-2 mt-0.5">
                   {attendance.clockIn ? new Date(attendance.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '00:00'}
                 </p>
               </div>
@@ -230,16 +230,16 @@ export const MobileHome: React.FC<MobileHomeProps> = ({ currentUser, onNavigate,
             {/* Feature 4: Messages */}
             <div
               onClick={() => handleNavigate('messages')}
-              className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-4 hover:border-slate-600/30 transition-all cursor-pointer group"
+              className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-3 sm:gap-4 hover:border-slate-600/30 transition-all cursor-pointer group"
             >
-              <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center group-hover:bg-slate-600 dark:group-hover:bg-slate-400 group-hover:text-white transition-colors">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center group-hover:bg-slate-600 dark:group-hover:bg-slate-400 group-hover:text-white transition-colors flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <div>
-                <p className="font-bold text-slate-900 dark:text-slate-100">쪽지/조직도</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">임직원 검색</p>
+              <div className="w-full">
+                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base break-keep line-clamp-1">쪽지/조직도</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 break-keep line-clamp-1 mt-0.5">임직원 검색</p>
               </div>
             </div>
 
