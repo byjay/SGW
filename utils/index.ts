@@ -1,4 +1,4 @@
-import { AppConfig } from '../constants/appConfig';
+import { APP_CONFIG } from '../constants/appConfig';
 
 /**
  * 로컬 스토리지 관리 유틸리티
@@ -13,7 +13,7 @@ export const storageUtils = {
       return null;
     }
   },
-  
+
   set: <T>(key: string, value: T): void => {
     try {
       localStorage.setItem(key, JSON.stringify(value));
@@ -21,7 +21,7 @@ export const storageUtils = {
       console.error(`[StorageUtils] Error setting ${key}:`, error);
     }
   },
-  
+
   remove: (key: string): void => {
     try {
       localStorage.removeItem(key);
@@ -29,11 +29,11 @@ export const storageUtils = {
       console.error(`[StorageUtils] Error removing ${key}:`, error);
     }
   },
-  
+
   getTimestamp: (key: string): number => {
     return parseInt(localStorage.getItem(key) || '0', 10);
   },
-  
+
   setTimestamp: (key: string, timestamp: number): void => {
     localStorage.setItem(key, timestamp.toString());
   },
@@ -47,29 +47,29 @@ export const dateUtils = {
     const d = typeof date === 'number' ? new Date(date) : date;
     return d.toLocaleDateString('ko-KR', options);
   },
-  
+
   formatDateTime: (timestamp: number): string => {
     return new Date(timestamp).toLocaleString('ko-KR');
   },
-  
+
   formatTime: (timestamp: number): string => {
     return new Date(timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
   },
-  
+
   formatRelativeTime: (timestamp: number): string => {
     const now = Date.now();
     const diff = now - timestamp;
-    
+
     const minute = 60 * 1000;
     const hour = minute * 60;
     const day = hour * 24;
-    
+
     if (diff < minute) return '방금';
     if (diff < hour) return `${Math.floor(diff / minute)}분 전`;
     if (diff < day) return `${Math.floor(diff / hour)}시간 전`;
     return `${Math.floor(diff / day)}일 전`;
   },
-  
+
   isToday: (timestamp: number): boolean => {
     const now = new Date();
     const date = new Date(timestamp);
@@ -85,11 +85,11 @@ export const stringUtils = {
     if (str.length <= maxLength) return str;
     return str.slice(0, maxLength) + '...';
   },
-  
+
   isEmpty: (str: string | null | undefined): boolean => {
     return !str || str.trim().length === 0;
   },
-  
+
   capitalize: (str: string): string => {
     return str.charAt(0).toUpperCase() + str.slice(1);
   },
@@ -103,20 +103,20 @@ export const validationUtils = {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   },
-  
+
   password: (password: string): { isValid: boolean; error?: string } => {
     if (stringUtils.isEmpty(password)) {
       return { isValid: false, error: '비밀번호를 입력해주세요.' };
     }
     if (password.length < APP_CONFIG.SECURITY.MIN_PASSWORD_LENGTH) {
-      return { 
-        isValid: false, 
-        error: `비밀번호는 ${APP_CONFIG.SECURITY.MIN_PASSWORD_LENGTH}자 이상이어야 합니다.` 
+      return {
+        isValid: false,
+        error: `비밀번호는 ${APP_CONFIG.SECURITY.MIN_PASSWORD_LENGTH}자 이상이어야 합니다.`
       };
     }
     return { isValid: true };
   },
-  
+
   required: (value: any, fieldName: string): { isValid: boolean; error?: string } => {
     if (value === null || value === undefined || (typeof value === 'string' && stringUtils.isEmpty(value))) {
       return { isValid: false, error: `${fieldName}을(를) 입력해주세요.` };
@@ -132,15 +132,15 @@ export const deviceUtils = {
   isMobile: (): boolean => {
     return window.innerWidth < 768;
   },
-  
+
   isTablet: (): boolean => {
     return window.innerWidth >= 768 && window.innerWidth < 1024;
   },
-  
+
   isDesktop: (): boolean => {
     return window.innerWidth >= 1024;
   },
-  
+
   getDeviceInfo: () => {
     return {
       isMobile: deviceUtils.isMobile(),
@@ -159,13 +159,13 @@ export const errorUtils = {
   log: (context: string, error: any, additionalInfo?: Record<string, any>): void => {
     console.error(`[${context}] Error:`, error, additionalInfo ? '\nAdditional Info:' : '', additionalInfo);
   },
-  
+
   handleError: (error: unknown, context: string): string => {
     const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
     errorUtils.log(context, error);
     return errorMessage;
   },
-  
+
   getUserFriendlyMessage: (error: any, defaultMessage: string = '오류가 발생했습니다.'): string => {
     if (typeof error === 'string') return error;
     if (error?.message) return error.message;
@@ -182,7 +182,7 @@ export const debounceUtils = {
     wait: number
   ): (...args: Parameters<T>) => void => {
     let timeout: NodeJS.Timeout | null = null;
-    
+
     return (...args: Parameters<T>) => {
       if (timeout) clearTimeout(timeout);
       timeout = setTimeout(() => func(...args), wait);
@@ -199,7 +199,7 @@ export const throttleUtils = {
     limit: number
   ): (...args: Parameters<T>) => void => {
     let inThrottle: boolean;
-    
+
     return (...args: Parameters<T>) => {
       if (!inThrottle) {
         func(...args);
