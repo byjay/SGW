@@ -10,7 +10,6 @@ import { ApprovalSystem } from './components/ApprovalSystem';
 import { CalendarView } from './components/CalendarView';
 import { Home } from './components/Home';
 import { LoginPopup } from './components/LoginPopup';
-import { MailView } from './components/MailView';
 import { InitialPasswordModal } from './components/InitialPasswordModal';
 import { User, ViewState, Post } from './types';
 import { MockServer } from './services/mockServer';
@@ -270,7 +269,6 @@ function App() {
                         {currentView === 'admin' && <AdminUsers currentUser={currentUser} />}
                         {currentView === 'approval' && <ApprovalSystem currentUser={currentUser} />}
                         {currentView === 'calendar' && <CalendarView currentUser={currentUser} />}
-                        {currentView === 'mail' && <MailView currentUser={currentUser} />}
                     </>
                 )}
             </Layout>

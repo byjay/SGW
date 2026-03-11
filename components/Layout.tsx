@@ -115,14 +115,7 @@ export const Layout: React.FC<LayoutProps> = ({
       <div className="pt-4 pb-2">
         <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">소통 및 알림</p>
       </div>
-      <button
-        onClick={() => window.open('https://m193.mailplug.com/member/login', '_blank')}
-        className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-100 transition-all duration-200"
-      >
-        <Mail size={20} />
-        <span className="font-medium">사내 메일</span>
-        <ExternalLink size={14} className="ml-auto opacity-50" />
-      </button>
+
       <NavItem view="board" icon={LayoutGrid} label="게시판" />
       <NavItem view="messages" icon={MessageSquare} label="쪽지함 (조직도)" badge={unreadCount > 0 ? unreadCount : undefined} />
 

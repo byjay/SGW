@@ -204,23 +204,7 @@ export const Home: React.FC<HomeProps> = ({ currentUser, onNavigate, unreadCount
                     </div>
                 </Card>
 
-                {/* Mail Card - Updated to open in new window */}
-                <Card
-                    title="사내 메일"
-                    icon={Mail}
-                    colorClass="text-indigo-600"
-                    bgClass="bg-indigo-100"
-                    onClick={() => window.open('https://m193.mailplug.com/member/login', '_blank')}
-                >
-                    <div className="flex flex-col items-center justify-center h-24">
-                        {unreadCount > 0 && (
-                            <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">
-                                {unreadCount}개
-                            </span>
-                        )}
-                        <p className="text-xs text-slate-500">MailPlug</p>
-                    </div>
-                </Card>
+
 
                 {/* Attendance Card - RESTORED */}
                 <Card
