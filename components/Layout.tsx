@@ -109,8 +109,8 @@ export const Layout: React.FC<LayoutProps> = ({
 
   const NavigationContent = () => (
     <>
-      <NavItem view="leave" icon={Calendar} label="연차 신청" />
       <NavItem view="home" icon={Home} label="홈 (대시보드)" />
+      <NavItem view="leave" icon={Calendar} label="연차 신청" />
 
       <div className="pt-4 pb-2">
         <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">소통 및 알림</p>
@@ -144,13 +144,6 @@ export const Layout: React.FC<LayoutProps> = ({
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.2)] z-[9999]">
           <div className="flex items-center justify-around h-16 px-2">
             <button
-              onClick={() => onNavigate('leave')}
-              className={`flex flex-col items-center gap-1 flex-1 ${currentView === 'leave' ? 'text-pink-600' : 'text-slate-400'} transition-colors`}
-            >
-              <Calendar className="w-5 h-5" fill={currentView === 'leave' ? 'currentColor' : 'none'} />
-              <span className="text-[10px] font-extrabold">연차</span>
-            </button>
-            <button
               onClick={() => onNavigate('home')}
               className={`flex flex-col items-center gap-1 flex-1 ${currentView === 'home' ? 'text-[#135bec]' : 'text-slate-400'} transition-colors`}
             >
@@ -158,11 +151,11 @@ export const Layout: React.FC<LayoutProps> = ({
               <span className="text-[10px] font-extrabold">홈</span>
             </button>
             <button
-              onClick={() => window.open('https://m193.mailplug.com/member/login', '_blank')}
-              className={`flex flex-col items-center gap-1 flex-1 ${currentView === 'mail' ? 'text-[#135bec]' : 'text-slate-400'} transition-colors`}
+              onClick={() => onNavigate('leave')}
+              className={`flex flex-col items-center gap-1 flex-1 ${currentView === 'leave' ? 'text-pink-600' : 'text-slate-400'} transition-colors`}
             >
-              <Mail className="w-5 h-5" />
-              <span className="text-[10px] font-extrabold">메일</span>
+              <Calendar className="w-5 h-5" fill={currentView === 'leave' ? 'currentColor' : 'none'} />
+              <span className="text-[10px] font-extrabold">연차</span>
             </button>
             <button
               onClick={() => onNavigate('board')}
