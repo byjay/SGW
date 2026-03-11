@@ -29,6 +29,7 @@ const INITIAL_USERS: User[] = [
   { id: '6', name: '김선우', email: 'swlee@seasargo.com', role: 'manager', status: 'active', position: '차장', department: '철의장', joinDate: '2018-10-15', phone: '010-8631-4430', totalLeave: 17, carryover: -1, leaveBalance: 15, password: '1', avatar: generate3DAvatar('김선우', '#ff0844', '#ffb199') },
   { id: '7', name: '이재명', email: 'leejm@seasargo.com', role: 'manager', status: 'active', position: '전무', department: '임원', joinDate: '2020-01-01', phone: '010-1234-5678', totalLeave: 20, carryover: 0, leaveBalance: 20, password: '1', avatar: generate3DAvatar('이재명', '#f6d365', '#fda085') },
   { id: '8', name: '김정인', email: 'kimji@seasargo.com', role: 'user', status: 'active', position: '사원', department: '전장', joinDate: '2024-01-15', phone: '010-1111-2222', totalLeave: 15, carryover: 0, leaveBalance: 15, password: '1', avatar: generate3DAvatar('김정인', '#667eea', '#764ba2') },
+  { id: '9', name: '장현현', email: 'janghh@seasargo.com', role: 'user', status: 'active', position: '주임', department: '전장', joinDate: '2026-03-03', phone: '010-0000-0000', totalLeave: 0, carryover: 0, leaveBalance: 0, password: '1', avatar: generate3DAvatar('장현현', '#fdfbfb', '#ebedee') },
 ];
 
 const INITIAL_POSTS: Post[] = [
