@@ -114,33 +114,8 @@ export const MobileHome: React.FC<MobileHomeProps> = ({ currentUser, onNavigate,
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f6f8] dark:bg-[#101622]">
-      {/* Top Header */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#135bec] text-white p-1.5 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M1.946 9.315c-.522-1.667-.55-2.259.028-3.572.254-.603.587-.825.816-.939.018-.01.036-.018.053-.025L12 2.25l9.157 2.524c.018.007.035.015.053.025.229.114.562.336.816.94.578 1.313.55 1.905.028 3.572l-9.054 10.474c-.29.34-.825.34-1.115 0L1.946 9.315z" />
-              </svg>
-            </div>
-            <h1 className="text-xl font-bold tracking-tight text-[#135bec]">SEASTAR</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative">
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              {unreadCount > 0 && <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>}
-            </button>
-            <div className="w-10 h-10 rounded-full bg-[#135bec]/10 border-2 border-[#135bec]/20 overflow-hidden">
-              <img className="w-full h-full object-cover" src={currentUser.avatar} alt={currentUser.name} />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="overflow-y-auto pb-24">
+    <div className="bg-[#f6f6f8] dark:bg-[#101622] -mx-4 -mt-4 min-h-[calc(100vh-64px)] pb-10 flex flex-col">
+      <div className="flex-1 w-full">
         {/* Welcome Section */}
         <section className="p-4">
           <div className="bg-gradient-to-br from-[#135bec] to-blue-700 rounded-xl p-6 text-white shadow-lg shadow-[#135bec]/20">
@@ -280,7 +255,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({ currentUser, onNavigate,
             <div className="w-24 bg-cover bg-center" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=200')` }}></div>
           </div>
         </section>
-      </main>
+      </div>
 
       {/* Attendance Modal */}
       {showAttendanceModal && (
