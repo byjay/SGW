@@ -19,9 +19,7 @@ export const InitialPasswordModal: React.FC<InitialPasswordModalProps> = ({ isOp
 
     if (!isOpen) return null;
 
-    const maxSkips = 3;
-    const skipsLeft = Math.max(0, maxSkips - skipCount);
-    const canSkip = skipsLeft > 0;
+    if (!isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -57,18 +55,6 @@ export const InitialPasswordModal: React.FC<InitialPasswordModalProps> = ({ isOp
         }
     };
 
-    const handleSkip = async () => {
-        if (!canSkip) return;
-        setLoading(true);
-        try {
-            await MockServer.updatePasswordChangedStatus(userId, skipCount + 1);
-            onComplete(false);
-        } catch (err) {
-            setError('오류가 발생했습니다.');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in shadow-[0_0_100px_rgba(0,0,0,0.5)]">
@@ -94,14 +80,7 @@ export const InitialPasswordModal: React.FC<InitialPasswordModalProps> = ({ isOp
                                 <span>비밀번호 변경으로 이동하기</span>
                             </button>
 
-                            {canSkip && (
-                                <button
-                                    onClick={handleSkip}
-                                    className="w-full py-3 text-slate-400 hover:text-slate-600 font-medium text-sm transition-colors"
-                                >
-                                    나중에 변경하기 (남은 횟수: {skipsLeft}회)
-                                </button>
-                            )}
+
                         </div>
                     </div>
                 ) : (

@@ -125,8 +125,8 @@ export const Layout: React.FC<LayoutProps> = ({
       <NavItem view="calendar" icon={CalendarIcon} label="일정 캘린더" />
       <NavItem view="approval" icon={FileCheck} label="전자 결재" />
 
-      {/* Only Kim Bongjung (ID: 5) and Lee Seon-woo (ID: 2) can see admin menu */}
-      {['2', '5'].includes(currentUser.id) && (
+      {/* Only Kim Bongjung (ID: 5) can see admin menu */}
+      {currentUser.id === '5' && (
         <>
           <div className="pt-4 pb-2">
             <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">관리자</p>
@@ -238,7 +238,7 @@ export const Layout: React.FC<LayoutProps> = ({
           </button>
           <div className="mt-4 px-4 pt-4 border-t border-slate-100/50">
             <p className="text-[10px] text-slate-400">
-              개발자: <a href="mailto:designsir@seastargo.com" className="text-blue-500 hover:text-blue-600 font-medium">designsir@seastargo.com</a>
+              시스템문의: <a href="mailto:designsir@seastargo.com" className="text-blue-500 hover:text-blue-600 font-medium">designsir@seastargo.com</a>
             </p>
           </div>
         </div>
@@ -302,7 +302,7 @@ export const Layout: React.FC<LayoutProps> = ({
             </button>
             <div className="mt-6 px-4 pt-6 border-t border-slate-100 text-center">
               <p className="text-xs text-slate-400 font-medium">
-                개발자: <a href="mailto:designsir@seastargo.com" className="text-blue-600 hover:text-blue-700">designsir@seastargo.com</a>
+                시스템문의: <a href="mailto:designsir@seastargo.com" className="text-blue-600 hover:text-blue-700">designsir@seastargo.com</a>
               </p>
             </div>
           </div>

@@ -108,8 +108,8 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
 
   // 비밀번호 리셋 모달 열기
   const openResetModal = (user: User) => {
-    if (!['2', '5'].includes(currentUser.id)) {
-      alert('비밀번호 리셋 권한이 없습니다.');
+    if (currentUser.id !== '5') {
+      alert('접근 권한이 없습니다.');
       return;
     }
     setShowResetModal(true);
@@ -175,8 +175,8 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
     }
   };
 
-  if (!['2', '5'].includes(currentUser.id)) {
-    return <div className="p-8 text-center text-red-500 font-bold">접근 권한이 없습니다. (관리자 전용)</div>;
+  if (currentUser.id !== '5') {
+    return <div className="p-8 text-center text-red-500">접근 권한이 없습니다. 시스템 설정은 최고 관리자만 접근 가능합니다.</div>;
   }
 
   return (
@@ -282,7 +282,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
                         <Trash2 size={16} />
                       </button>
                       {/* 김봉정 관리자 전용 비밀번호 리셋 버튼 */}
-                      {['2', '5'].includes(currentUser.id) && (
+                      {currentUser.id === '5' && (
                         <button
                           onClick={() => openResetModal(user)}
                           className="ml-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-lg transition-colors"

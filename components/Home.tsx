@@ -85,10 +85,10 @@ export const Home: React.FC<HomeProps> = ({ currentUser, onNavigate, unreadCount
     );
 
     const handleSystemSettings = () => {
-        if (currentUser.id === '1') { // Check specifically for Ko Youngkwan
+        if (currentUser.id === '5') { // Check specifically for Kim Bong-jeong
             onNavigate('admin');
         } else {
-            alert("접근 권한이 없습니다.\n시스템 설정은 고영관(CEO)님만 접근 가능합니다.");
+            alert("접근 권한이 없습니다.\n시스템 설정은 김봉정(최고 관리자)님만 접근 가능합니다.");
         }
     };
 

@@ -107,7 +107,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({ currentUser, onNavigate,
     checkLocation();
   };
 
-  const isAdmin = ['2', '5'].includes(currentUser.id);
+  const isAdmin = currentUser.id === '5';
 
   const handleNavigate = (view: any) => {
     onNavigate(view);
@@ -218,7 +218,7 @@ export const MobileHome: React.FC<MobileHomeProps> = ({ currentUser, onNavigate,
               </div>
             </div>
 
-            {/* Bug #3 Fix: Admin check corrected to ['2', '5'] */}
+            {/* User Management for Supreme Admin */}
             {isAdmin && (
               <div
                 onClick={() => handleNavigate('admin')}
