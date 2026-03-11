@@ -110,6 +110,7 @@ const STORAGE_KEYS = {
   ATTENDANCE: 'app_attendance',
   SCHEDULES: 'app_schedules',
   PASSWORD_RESET_LOGS: 'app_password_reset_logs',
+  ACTIVITY_LOGS: 'app_activity_logs',
   MIGRATION: 'app_migration_v2'
 };
 
@@ -127,7 +128,7 @@ export const MockServer = {
   // Initialize data if empty
   init: () => {
     // Initialize data only if not exists
-    const MIGRATION_KEY = 'app_migration_v5'; // Bumped for department fix and force upsert
+    const MIGRATION_KEY = 'app_migration_v6'; // Final hard sync to reflect all name/dept/pos changes
     const storedUsersJson = localStorage.getItem(STORAGE_KEYS.USERS);
     const users: User[] = storedUsersJson ? JSON.parse(storedUsersJson) : [];
     const currentMigration = localStorage.getItem(MIGRATION_KEY);
@@ -136,14 +137,24 @@ export const MockServer = {
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USERS));
       localStorage.setItem(MIGRATION_KEY, 'done');
     } else if (!currentMigration) {
-      // Force update existing users and add new ones
+      // Force update existing users and ensure they match INITIAL_USERS for key fields
+      // This is necessary because user reported lists was not updating
       const updatedUsers = [...users];
       INITIAL_USERS.forEach(initialUser => {
         const existingIndex = updatedUsers.findIndex(u => u.id === initialUser.id);
         if (existingIndex > -1) {
-          // Update existing user details (except maybe password if it was changed? 
-          // But for ID '9' and '1', we want to force reflect the new names/departments)
-          updatedUsers[existingIndex] = { ...updatedUsers[existingIndex], ...initialUser };
+          // Merge updates from INITIAL_USERS (name, position, department, joinDate, email)
+          // Preserve their password/leave status if they already changed it, 
+          // but for id '9' specifically, ensure all is fresh.
+          updatedUsers[existingIndex] = {
+            ...updatedUsers[existingIndex],
+            name: initialUser.name,
+            email: initialUser.email,
+            position: initialUser.position,
+            department: initialUser.department,
+            joinDate: initialUser.joinDate,
+            avatar: initialUser.avatar
+          };
         } else {
           updatedUsers.push(initialUser);
         }
@@ -185,12 +196,20 @@ export const MockServer = {
     if (!localStorage.getItem(STORAGE_KEYS.SCHEDULES)) {
       localStorage.setItem(STORAGE_KEYS.SCHEDULES, JSON.stringify(INITIAL_SCHEDULES));
     }
+    if (!localStorage.getItem(STORAGE_KEYS.ACTIVITY_LOGS)) {
+      localStorage.setItem(STORAGE_KEYS.ACTIVITY_LOGS, JSON.stringify([]));
+    }
   },
 
   changePassword: async (userId: string, newPassword: string): Promise<void> => {
     const users: User[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    const user = users.find(u => u.id === userId);
     const updatedUsers = users.map(u => u.id === userId ? { ...u, password: btoa(newPassword), passwordChanged: true } : u);
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updatedUsers));
+
+    if (user) {
+      await MockServer.logActivity(userId, user.name, '비밀번호 변경', '사용자가 직접 비밀번호를 변경함');
+    }
   },
 
   isInitialPasswordRequired: async (userId: string): Promise<{ required: boolean; count: number }> => {
@@ -202,6 +221,9 @@ export const MockServer = {
     // Default password is '1' or btoa('1')
     const isDefault = user.password === '1' || user.password === btoa('1');
     if (isDefault && !user.passwordChanged) {
+      // If skip count is 3 or more, they MUST change it (no skip button)
+      // If skip count is less than 3, they can skip.
+      // The modal will decide whether to show skip button based on this count.
       return { required: true, count: user.passwordChangeCount || 0 };
     }
     return { required: false, count: 0 };
@@ -241,14 +263,19 @@ export const MockServer = {
     const newUser = { ...user, password: btoa(user.password || '1') };
     users.push(newUser);
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    await MockServer.logActivity('admin', '시스템 관리자', '사용자 생성', `${newUser.name}(${newUser.id}) 계정 생성`);
     return newUser;
   },
 
   deleteUser: async (userId: string): Promise<void> => {
     await delay(300);
     let users: User[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    const user = users.find(u => u.id === userId);
     users = users.filter(u => u.id !== userId);
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    if (user) {
+      await MockServer.logActivity('admin', '시스템 관리자', '사용자 삭제', `${user.name}(${userId}) 계정 삭제`);
+    }
   },
 
   updateUser: async (userId: string, updates: Partial<User>): Promise<User | undefined> => {
@@ -256,10 +283,12 @@ export const MockServer = {
     let users: User[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
     const idx = users.findIndex(u => u.id === userId);
     if (idx === -1) return undefined;
-    // Don't allow overwriting password via this method
-    const { password, ...safeUpdates } = updates as any;
-    users[idx] = { ...users[idx], ...safeUpdates };
+
+    // Merge all updates including name, department, position etc.
+    users[idx] = { ...users[idx], ...updates };
+
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    await MockServer.logActivity('admin', '시스템 관리자', '사용자 정보 수정', `${users[idx].name}(${userId}) 정보 변경: ${Object.keys(updates).join(', ')}`);
     return { ...users[idx], password: '' };
   },
 
@@ -269,6 +298,7 @@ export const MockServer = {
     let users: User[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
     users = users.map(u => ({ ...u, password: btoa(newPassword) }));
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    await MockServer.logActivity('admin', '시스템 관리자', '비밀번호 일괄 초기화', '모든 사용자의 비밀번호가 초기화됨');
   },
 
   login: async (userId: string, inputPassword?: string): Promise<User | undefined> => {
@@ -284,6 +314,7 @@ export const MockServer = {
     }
 
     await MockServer.logLoginHistory(user.id, 'login');
+    await MockServer.logActivity(user.id, user.name, '로그인', '아이디/비밀번호 로그인 성공');
     return { ...user, password: '' };
   },
 
@@ -298,6 +329,7 @@ export const MockServer = {
     }
 
     await MockServer.logLoginHistory(user.id, 'login');
+    await MockServer.logActivity(user.id, user.name, '로그인', '이메일 로그인 성공');
     return { ...user, password: '' };
   },
 
@@ -318,6 +350,26 @@ export const MockServer = {
     return JSON.parse(localStorage.getItem(STORAGE_KEYS.LOGIN_HISTORY) || '[]');
   },
 
+  logActivity: async (userId: string, userName: string, type: string, details: string): Promise<void> => {
+    const logs = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITY_LOGS) || '[]');
+    logs.push({
+      id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      userId,
+      userName,
+      type,
+      details,
+      timestamp: Date.now()
+    });
+    // Keep last 10000 logs
+    if (logs.length > 10000) logs.shift();
+    localStorage.setItem(STORAGE_KEYS.ACTIVITY_LOGS, JSON.stringify(logs));
+  },
+
+  getActivityLogs: async (): Promise<any[]> => {
+    await delay(300);
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVITY_LOGS) || '[]').sort((a: any, b: any) => b.timestamp - a.timestamp);
+  },
+
   heartbeat: async (userId: string): Promise<void> => {
     const onlineStatus = JSON.parse(localStorage.getItem(STORAGE_KEYS.ONLINE) || '{}');
     onlineStatus[userId] = Date.now();
@@ -334,11 +386,35 @@ export const MockServer = {
     });
   },
 
+  getAttendance: async (userId: string): Promise<any[]> => {
+    const attendance = JSON.parse(localStorage.getItem(STORAGE_KEYS.ATTENDANCE) || '[]');
+    return attendance.filter((a: any) => a.userId === userId);
+  },
+
+  updateAttendance: async (userId: string, userName: string, type: 'checkIn' | 'checkOut'): Promise<void> => {
+    const attendance = JSON.parse(localStorage.getItem(STORAGE_KEYS.ATTENDANCE) || '[]');
+    const now = Date.now();
+    attendance.push({
+      id: `att_${now}`,
+      userId,
+      userName,
+      type,
+      timestamp: now
+    });
+    localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(attendance));
+    await MockServer.logActivity(userId, userName, type === 'checkIn' ? '출근' : '퇴근', `${type === 'checkIn' ? '출근' : '퇴근'} 체크 완료`);
+  },
+
   logout: async (userId: string): Promise<void> => {
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    const user = users.find((u: User) => u.id === userId);
     const onlineStatus = JSON.parse(localStorage.getItem(STORAGE_KEYS.ONLINE) || '{}');
     delete onlineStatus[userId];
     localStorage.setItem(STORAGE_KEYS.ONLINE, JSON.stringify(onlineStatus));
     await MockServer.logLoginHistory(userId, 'logout');
+    if (user) {
+      await MockServer.logActivity(userId, user.name, '로그아웃', '시스템 접속 종료');
+    }
   },
 
   getPosts: async (): Promise<Post[]> => {
@@ -367,6 +443,7 @@ export const MockServer = {
     };
     posts.unshift(newPost);
     localStorage.setItem(STORAGE_KEYS.POSTS, JSON.stringify(posts));
+    await MockServer.logActivity(author.id, author.name, '게시글 작성', `[${type}] ${title}`);
     return newPost;
   },
 
@@ -387,6 +464,7 @@ export const MockServer = {
 
     posts[postIndex].comments.push(newComment);
     localStorage.setItem(STORAGE_KEYS.POSTS, JSON.stringify(posts));
+    await MockServer.logActivity(user.id, user.name, '댓글 작성', `게시글(${postId})에 댓글 추가: ${content.substring(0, 20)}${content.length > 20 ? '...' : ''}`);
     return newComment;
   },
 
@@ -432,6 +510,7 @@ export const MockServer = {
 
     allMessages.push(newMessage);
     localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(allMessages));
+    await MockServer.logActivity(sender.id, sender.name, '쪽지 발송', `${receiver.name}님에게 쪽지 발송: ${content.substring(0, 20)}${content.length > 20 ? '...' : ''}`);
     return newMessage;
   },
 
@@ -548,6 +627,7 @@ export const MockServer = {
     });
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updatedUsers));
 
+    await MockServer.logActivity(userId, userName, '연차 신청', `${type} 신청 (${startDate} ~ ${endDate}, ${diffDays}일)`);
     return newRequest;
   },
 
@@ -713,6 +793,10 @@ export const MockServer = {
     let approvals: Approval[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPROVALS) || '[]');
     approvals = approvals.map(a => a.id === approvalId ? { ...a, status, updatedAt: Date.now() } : a);
     localStorage.setItem(STORAGE_KEYS.APPROVALS, JSON.stringify(approvals));
+    const approval = approvals.find(a => a.id === approvalId);
+    if (approval) {
+      await MockServer.logActivity('admin', '시스템 관리자', '결재 상태 변경', `결재(${approvalId}) 상태를 ${status === 'approved' ? '승인' : '반려'}으로 변경`);
+    }
   },
 
   logAttendance: async (userId: string, type: 'clock_in' | 'clock_out'): Promise<AttendanceLog> => {
@@ -726,6 +810,9 @@ export const MockServer = {
     };
     logs.push(newLog);
     localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(logs));
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    const user = users.find((u: any) => u.id === userId);
+    await MockServer.logActivity(userId, user?.name || userId, type === 'clock_in' ? '출근' : '퇴근', `${type === 'clock_in' ? '출근' : '퇴근'} 체크 완료 (지정 근무지)`);
     return newLog;
   },
 
@@ -789,6 +876,7 @@ export const MockServer = {
     const schedules: Schedule[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.SCHEDULES) || '[]');
     schedules.push(schedule);
     localStorage.setItem(STORAGE_KEYS.SCHEDULES, JSON.stringify(schedules));
+    await MockServer.logActivity(schedule.userId, schedule.userName, '일정 등록', `새 일정 등록: ${schedule.title}`);
     return schedule;
   },
 
@@ -863,6 +951,10 @@ export const MockServer = {
       return r;
     });
     localStorage.setItem(STORAGE_KEYS.CHAT_ROOMS, JSON.stringify(updatedRooms));
+
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    const user = users.find((u: any) => u.id === senderId);
+    await MockServer.logActivity(senderId, user?.name || senderId, '채팅 메시지', `채팅방(${roomId})에 메시지 전송: ${content.substring(0, 20)}${content.length > 20 ? '...' : ''}`);
 
     return newMessage;
   },

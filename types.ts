@@ -139,6 +139,16 @@ export interface DeviceInfo {
   platform: string;
 }
 
+export interface ActivityLog {
+  id: string;
+  userId: string;
+  userName: string;
+  type: string;
+  details: string;
+  timestamp: number;
+  ip?: string;
+}
+
 export type ViewState = 'login' | 'home' | 'board' | 'messages' | 'chat' | 'leave' | 'approval' | 'admin' | 'calendar' | 'mail';
 
 export interface Schedule {

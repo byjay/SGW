@@ -273,6 +273,25 @@ export const Layout: React.FC<LayoutProps> = ({
           </nav>
 
           <div className="pt-6 border-t border-slate-100 mt-auto">
+            {/* Mobile Online Users List */}
+            <div className="mb-6 bg-slate-50 p-4 rounded-xl">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">접속 중인 동료 ({onlineUsers.length})</p>
+              <div className="flex flex-wrap gap-2">
+                {onlineUsers.filter(u => u.id !== currentUser.id).map(user => (
+                  <div key={user.id} className="flex items-center space-x-2 bg-white px-2 py-1.5 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="relative">
+                      <img src={user.avatar} alt="" className="w-5 h-5 rounded-full" />
+                      <div className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 bg-green-500 border border-white rounded-full"></div>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-700">{user.name}</span>
+                  </div>
+                ))}
+                {onlineUsers.length <= 1 && (
+                  <p className="text-[10px] text-slate-400 italic px-1">다른 접속자가 없습니다.</p>
+                )}
+              </div>
+            </div>
+
             <div className="flex items-center space-x-3 mb-6 bg-slate-50 p-3 rounded-xl">
               <img src={currentUser.avatar} alt={currentUser.name} className="w-10 h-10 rounded-full" />
               <div>

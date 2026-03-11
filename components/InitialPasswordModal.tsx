@@ -80,7 +80,17 @@ export const InitialPasswordModal: React.FC<InitialPasswordModalProps> = ({ isOp
                                 <span>비밀번호 변경으로 이동하기</span>
                             </button>
 
-
+                            {skipCount < 3 && (
+                                <button
+                                    onClick={async () => {
+                                        await MockServer.updatePasswordChangedStatus(userId, skipCount + 1);
+                                        onComplete(false);
+                                    }}
+                                    className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-all text-sm mb-2"
+                                >
+                                    다음에 변경하기 ({3 - skipCount}회 남음)
+                                </button>
+                            )}
                         </div>
                     </div>
                 ) : (
