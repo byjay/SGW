@@ -77,8 +77,15 @@ function App() {
         // Try to restore session from simple storage (optional, for refresh)
         const storedUserId = localStorage.getItem('current_user_id');
         if (storedUserId) {
-            MockServer.login(storedUserId).then(user => {
-                if (user) setCurrentUser(user);
+            MockServer.login(storedUserId).then(async (user) => {
+                if (user) {
+                    setCurrentUser(user);
+                    // Also check for mandatory password change on refresh/restore
+                    const check = await MockServer.isInitialPasswordRequired(user.id);
+                    if (check.required) {
+                        setInitialPwdCheck(check);
+                    }
+                }
             });
         }
     }, []);

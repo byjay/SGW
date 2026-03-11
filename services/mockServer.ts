@@ -127,23 +127,28 @@ export const MockServer = {
   // Initialize data if empty
   init: () => {
     // Initialize data only if not exists
-    const MIGRATION_KEY = 'app_migration_v4'; // Bumped heavily to sync user 9 department fix
-    if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
+    const MIGRATION_KEY = 'app_migration_v5'; // Bumped for department fix and force upsert
+    const storedUsersJson = localStorage.getItem(STORAGE_KEYS.USERS);
+    const users: User[] = storedUsersJson ? JSON.parse(storedUsersJson) : [];
+    const currentMigration = localStorage.getItem(MIGRATION_KEY);
+
+    if (users.length === 0) {
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USERS));
       localStorage.setItem(MIGRATION_KEY, 'done');
-    } else if (!localStorage.getItem(MIGRATION_KEY)) {
-      // One-time migration to add Kim Jeong-in without breaking future deletes
-      const users: User[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
-      let updated = false;
+    } else if (!currentMigration) {
+      // Force update existing users and add new ones
+      const updatedUsers = [...users];
       INITIAL_USERS.forEach(initialUser => {
-        if (!users.find(u => u.id === initialUser.id || u.name === initialUser.name)) {
-          users.push(initialUser);
-          updated = true;
+        const existingIndex = updatedUsers.findIndex(u => u.id === initialUser.id);
+        if (existingIndex > -1) {
+          // Update existing user details (except maybe password if it was changed? 
+          // But for ID '9' and '1', we want to force reflect the new names/departments)
+          updatedUsers[existingIndex] = { ...updatedUsers[existingIndex], ...initialUser };
+        } else {
+          updatedUsers.push(initialUser);
         }
       });
-      if (updated) {
-        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-      }
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updatedUsers));
       localStorage.setItem(MIGRATION_KEY, 'done');
     }
     if (!localStorage.getItem(STORAGE_KEYS.LEAVE_REQUESTS)) {
