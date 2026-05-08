@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seastar GW</title>
+<link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+
+<!-- Login screen — SGW 페이지로 위임 -->
+<div id="loginScreen" class="login-screen">
+  <div class="logo-block">
+    <div class="logo-mark">⭐</div>
+    <div class="logo-name">SEASTAR GW</div>
+    <div class="logo-sub">사원번호로 그룹웨어 로그인</div>
+  </div>
+  <button class="btn-primary" id="btnOpenGW" style="width:100%;max-width:280px;padding:14px">
+    🌐 그룹웨어 열기 (sgw-seastar-work.pages.dev)
+  </button>
+  <div class="login-hint">
+    그룹웨어 페이지에서 사원번호로 로그인하면<br>
+    이 확장앱에 자동 반영됩니다 (영구 유지)
+  </div>
+  <details style="margin-top:14px;font-size:10px;color:#8b949e">
+    <summary>고급: 직접 입력</summary>
+    <form id="loginForm" style="margin-top:8px">
+      <label>사원번호</label>
+      <input type="text" id="empNum" placeholder="예: 2024001" required>
+      <button type="submit" class="btn-ghost" style="margin-top:6px">수동 등록</button>
+    </form>
+  </details>
+  <div id="loginError" class="login-err"></div>
+</div>
+
+<!-- Main app (after login) -->
+<div id="app" class="app" style="display:none">
+  <header class="topbar">
+    <div class="logo-mini">
+      <span class="mark">⭐</span>
+      <div>
+        <div class="name">SEASTAR GW</div>
+        <div class="sub" id="userInfo">- · 미로그인</div>
+      </div>
+    </div>
+    <button class="icon-btn" id="btnRefresh" title="활동 새로고침">🔄</button>
+    <button class="icon-btn" id="btnLogout" title="로그아웃">🚪</button>
+  </header>
+
+  <!-- Tab nav -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="activity">
+      🔔 알림 <span class="badge" id="badgeAll">0</span>
+    </button>
+    <button class="tab-btn" data-tab="menu">📋 메뉴</button>
+    <button class="tab-btn" data-tab="leave">🌴 연차</button>
+    <button class="tab-btn" data-tab="sedms">📂 SEDMS</button>
+  </nav>
+
+  <!-- Tab 1: 알림/활동 -->
+  <div class="tab-pane active" data-tab="activity">
+    <section class="sec">
+      <div class="sec-h">📊 신규 알림 카운트</div>
+      <div class="counts-grid">
+        <div class="cnt-card notice">
+          <div class="cnt-icon">📢</div>
+          <div class="cnt-l">공지</div>
+          <div class="cnt-v" id="cntNotice">0</div>
+        </div>
+        <div class="cnt-card leave">
+          <div class="cnt-icon">🌴</div>
+          <div class="cnt-l">연차</div>
+          <div class="cnt-v" id="cntLeave">0</div>
+        </div>
+        <div class="cnt-card msg">
+          <div class="cnt-icon">💬</div>
+          <div class="cnt-l">메시지</div>
+          <div class="cnt-v" id="cntMessage">0</div>
+        </div>
+        <div class="cnt-card approval">
+          <div class="cnt-icon">✍️</div>
+          <div class="cnt-l">결재</div>
+          <div class="cnt-v" id="cntApproval">0</div>
+        </div>
+      </div>
+    </section>
+    <section class="sec">
+      <div class="sec-h">최근 활동</div>
+      <div id="activityList" class="activity-list">
+        <div class="empty">📭 최근 활동 없음</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Tab 1.5: 전체 메뉴 (SGW 8개 페이지 빠른 접근) -->
+  <div class="tab-pane" data-tab="menu">
+    <section class="sec">
+      <div class="sec-h">📋 SGW 전체 메뉴 — 클릭 시 해당 페이지 새 탭으로 열림</div>
+      <div class="menu-grid">
+        <button class="menu-card" data-go="/">
+          <div class="mi">🏠</div><div class="ml">홈</div>
+          <div class="md">대시보드</div>
+        </button>
+        <button class="menu-card" data-go="/board">
+          <div class="mi">📢</div><div class="ml">공지/게시판</div>
+          <div class="md">사내 공지</div>
+        </button>
+        <button class="menu-card" data-go="/messages">
+          <div class="mi">💬</div><div class="ml">메시지</div>
+          <div class="md">DM/그룹</div>
+        </button>
+        <button class="menu-card" data-go="/chat">
+          <div class="mi">💭</div><div class="ml">채팅</div>
+          <div class="md">실시간 채팅</div>
+        </button>
+        <button class="menu-card" data-go="/leave">
+          <div class="mi">🌴</div><div class="ml">연차</div>
+          <div class="md">신청/관리</div>
+        </button>
+        <button class="menu-card" data-go="/approval">
+          <div class="mi">✍️</div><div class="ml">결재</div>
+          <div class="md">전자결재</div>
+        </button>
+        <button class="menu-card" data-go="/calendar">
+          <div class="mi">📅</div><div class="ml">캘린더</div>
+          <div class="md">일정</div>
+        </button>
+        <button class="menu-card" data-go="https://m193.mailplug.com/member/login" data-ext="1">
+          <div class="mi">📧</div><div class="ml">메일</div>
+          <div class="md">MailPlug</div>
+        </button>
+        <button class="menu-card" data-go="https://sedms.seastar.co.kr/" data-ext="1">
+          <div class="mi">📂</div><div class="ml">SEDMS</div>
+          <div class="md">전자문서</div>
+        </button>
+        <button class="menu-card admin-only" data-go="/admin">
+          <div class="mi">🛡️</div><div class="ml">관리자</div>
+          <div class="md">사용자관리</div>
+        </button>
+      </div>
+    </section>
+    <section class="sec">
+      <div class="sec-h">🔗 빠른 액션</div>
+      <div class="action-bar">
+        <button class="btn-primary" id="btnGoHome">🌐 그룹웨어 메인</button>
+        <button class="btn-ghost" id="btnRefreshAll">🔄 알림 갱신</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Tab 2: 연차 -->
+  <div class="tab-pane" data-tab="leave">
+    <section class="sec">
+      <div class="sec-h">🌴 연차 신청 / 관리</div>
+      <div class="action-bar">
+        <button class="btn-primary" id="btnLeaveOpen">📋 연차 페이지 열기</button>
+        <button class="btn-ghost" id="btnLeaveNew">✏️ 새 신청</button>
+      </div>
+      <div class="hint">사이드 패널에서 빠른 신청 — 자세한 관리는 [페이지 열기]</div>
+    </section>
+    <section class="sec">
+      <div class="sec-h">내 연차 현황</div>
+      <div id="myLeave" class="leave-summary">
+        <div class="empty">로딩 중...</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Tab 3: SEDMS -->
+  <div class="tab-pane" data-tab="sedms">
+    <section class="sec">
+      <div class="sec-h">📂 SEDMS — 전자결재/문서</div>
+      <div class="action-bar">
+        <button class="btn-primary" id="btnSedmsOpen">📂 SEDMS 열기</button>
+        <button class="btn-ghost" id="btnSedmsApprove">✍️ 대기 결재</button>
+      </div>
+      <div class="hint">SEDMS는 별도 인증이 필요할 수 있습니다 (SSO 자동 연동)</div>
+    </section>
+    <section class="sec">
+      <div class="sec-h">대기 결재 목록</div>
+      <div id="pendingApproval" class="approval-list">
+        <div class="empty">로딩 중...</div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="footer">
+    <a href="#" id="openOptions">설정</a> ·
+    <a href="#" id="checkUpdate">🔄 업데이트 확인</a> ·
+    <span class="ver" id="curVer">v1.0.0</span>
+    <div id="updateStatus" class="update-status"></div>
+  </footer>
+</div>
+
+<div id="toasts" class="toasts"></div>
+
+<script src="sidepanel.js" type="module"></script>
+</body>
+</html>

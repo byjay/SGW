@@ -1,0 +1,68 @@
+{
+  "manifest_version": 3,
+  "name": "Seastar Groupware - 사내 통합 도우미",
+  "short_name": "Seastar GW",
+  "version": "1.0.4",
+  "description": "사원번호 로그인 · 연차/SEDMS 빠른 접근 · 영구 세션 · 활동 푸시 알림. SGW Seastar Work 연동 확장앱.",
+  "minimum_chrome_version": "116",
+  "update_url": "https://swgs-internal.pages.dev/updates.xml",
+
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+
+  "action": {
+    "default_title": "Seastar Groupware",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+
+  "permissions": [
+    "tabs",
+    "storage",
+    "scripting",
+    "sidePanel",
+    "notifications",
+    "alarms",
+    "downloads"
+  ],
+
+  "host_permissions": [
+    "https://sgw-seastar-work.pages.dev/*",
+    "https://swgs-internal.pages.dev/*",
+    "https://*.seastar.co.kr/*",
+    "https://m193.mailplug.com/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://sgw-seastar-work.pages.dev/*",
+        "https://*.seastar.co.kr/*"
+      ],
+      "js": ["lib/messaging.js", "content/auth-bridge.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["content/page-bridge.js"],
+      "matches": ["https://sgw-seastar-work.pages.dev/*"]
+    }
+  ]
+}

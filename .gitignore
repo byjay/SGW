@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Extension build artifacts (자동 빌드 산출물)
+extension/_build/
+extension/_deploy/
+extension/.wrangler/
+_keys/
+*.pem
+*.crx
+*.zip
