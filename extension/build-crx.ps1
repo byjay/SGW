@@ -2,7 +2,8 @@
 $ErrorActionPreference = "Stop"
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BUILDDIR = Join-Path $ROOT "_build"
-$KEYDIR = Join-Path (Split-Path -Parent $ROOT) "_keys"
+# swgs/ 자체 폴더 안의 .keys/ 사용 (자체 완결)
+$KEYDIR = Join-Path (Split-Path -Parent $ROOT) ".keys"
 $KEY = Join-Path $KEYDIR "swgs.pem"
 $STAGE = Join-Path $BUILDDIR "crx-stage"
 $chrome = "C:\Program Files\Google\Chrome\Application\chrome.exe"

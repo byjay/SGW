@@ -31,3 +31,9 @@ _keys/
 *.pem
 *.crx
 *.zip
+
+# SGW self-contained dirs
+.keys/
+installer/_build/
+installer/_deploy/
+

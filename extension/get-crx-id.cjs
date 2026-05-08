@@ -1,5 +1,5 @@
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
-const KEY = path.join(__dirname, '..', '_keys', 'swgs.pem');
+const KEY = path.join(__dirname, '..', '.keys', 'swgs.pem');
 if (!fs.existsSync(KEY)) { console.error('키 없음:', KEY); process.exit(1); }
 const key = crypto.createPrivateKey(fs.readFileSync(KEY, 'utf8'));
 const der = crypto.createPublicKey(key).export({ type: 'spki', format: 'der' });
