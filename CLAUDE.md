@@ -70,6 +70,31 @@
 ## 🔜 할 일 (다음 세션 작업 목록)
 
 ### 우선순위 높음
+
+- [ ] **★ SEDMS SSO 통합 (핵심 비전)**
+  - **목표**: 직원이 SGW 사원번호로 한 번 로그인 → **자동으로 SEDMS 진입** (재로그인 X)
+  - **사용자 시나리오**:
+    1. 직원이 도구 모음 ⭐ 클릭 → 사이드 패널
+    2. 사원번호 + 비밀번호 입력 (또는 영구 로그인 자동 인식)
+    3. [📂 SEDMS] 클릭 또는 자동 redirect
+    4. SEDMS가 이미 로그인된 상태로 열림 (SSO)
+  - **기술 옵션 (택일/병행)**:
+    1. **SAML / OAuth 정식 SSO**: 회사 IDP 있으면 가장 깨끗 (best practice)
+    2. **JWT 브릿지**: SGW 로그인 시 발급된 토큰을 SEDMS의 `Authorization: Bearer` 헤더로 주입 (declarativeNetRequest 활용)
+    3. **Cookie 공유**: 두 도메인이 sub/super 관계면 도메인 쿠키로 자동 전달
+    4. **확장이 자동 로그인 폼 채움**: SEDMS 로그인 페이지 도착 시 content script가 사원번호+비밀번호 자동 입력 후 submit (가장 간단, IDP 없을 때)
+  - **확장에 필요한 변경**:
+    - `manifest.json` `host_permissions`에 SEDMS 도메인 추가
+    - `content_scripts.matches`에 SEDMS 추가 (로그인 페이지 후킹용)
+    - `content/sedms-bridge.js` (신규) — SEDMS 페이지 진입 시 자동 인증 처리
+    - `background/service-worker.js`에 `case 'SWGS_OPEN_SEDMS'` 핸들러 추가
+    - `lib/storage.js` `DEFAULTS.sedms_host` 실제 URL로 갱신
+  - **선결 사항**:
+    - SEDMS 인증 방식 확인 (자체 ID/PW vs SGW 통합)
+    - 회사 IDP/SSO 인프라 존재 여부
+    - SEDMS 도메인 + 로그인 페이지 URL
+    - SGW와 SEDMS의 사원번호 동일 사용 여부
+
 - [ ] **그룹웨어 본체 ↔ 확장 실 데이터 연동 검증**
   - 본체는 현재 MockServer 사용 중 (`services/mockServer.ts`)
   - 확장은 `auth-bridge.js`로 localStorage 동기화 가정
@@ -79,7 +104,7 @@
 - [ ] **SEDMS 실제 URL 확인 후 반영**
   - 현재: `https://sedms.seastar.co.kr/` (placeholder)
   - 사이드 패널의 [📂 SEDMS 열기] 링크 + 매뉴얼 갱신
-  - SEDMS SSO 자동 연동 가능한지 조사
+  - 위 SSO 통합 항목과 함께 진행
 
 - [ ] **사내 정식 IT 배포 테스트**
   - 직원 PC 1대에서 `Install-SGW.bat` 검증
@@ -116,6 +141,31 @@
 - [ ] **운영 가이드** — IT 관리자용 (정책 일괄 배포, 문제 해결)
 - [ ] **버전 정책** — 메이저/마이너 변경 기준 정의
 - [ ] **CHANGELOG.md** — 버전별 변경 이력
+
+---
+
+## 🎯 향후 SSO 비전 (SGW + SEDMS 통합)
+
+```
+[직원 PC]
+  ↓ 도구 모음 ⭐ 클릭
+[Seastar GW 사이드 패널]
+  ↓ 사원번호 한 번 로그인 (영구 유지)
+  ↓ [📂 SEDMS] 클릭
+[자동 SSO 처리 — 사용자 클릭 0회]
+  ├─ Option 1: SAML/OAuth IDP 통한 정식 SSO
+  ├─ Option 2: JWT 브릿지 (declarativeNetRequest 헤더 주입)
+  ├─ Option 3: Cookie 공유 (도메인 sub/super)
+  └─ Option 4: content script 자동 로그인 폼 채움
+  ↓
+[SEDMS — 이미 로그인된 상태로 진입]
+  · 결재 / 문서 / 회람 즉시 사용 가능
+  · 재로그인 불필요
+```
+
+**핵심 가치 제안**: "사원이 사내 시스템 N개 다닐 때마다 매번 로그인 안 함"
+- SGW 사원번호 1회 로그인 → SEDMS / 그룹웨어 / 메일 / 캘린더 모두 자동 인증
+- 도구 모음 ⭐ 한 번 → 회사의 모든 디지털 자산에 즉시 접근
 
 ---
 
