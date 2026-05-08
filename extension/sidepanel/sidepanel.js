@@ -142,12 +142,24 @@ function attachUI() {
     chrome.runtime.sendMessage({ type: 'SWGS_TRIGGER_POLL' });
     toast('🔄 새로고침', 'green');
   };
-  // 업데이트 확인 버튼
+  // ★ 원클릭 자동 업데이트 — 다운로드/팝업 없이 자동 적용 + 자동 재시작
   document.getElementById('checkUpdate').onclick = async (e) => {
     e.preventDefault();
-    showUpdateStatus('🔄 확인 중...', false);
-    const r = await chrome.runtime.sendMessage({ type: 'SWGS_FORCE_UPDATE_CHECK' });
-    if (!r || !r.ok) showUpdateStatus('⚠ 확인 실패', false);
+    showUpdateStatus('🔄 새 버전 확인 중...', false);
+    toast('🔄 자동 업데이트 진행 중...', 'green');
+    const r = await chrome.runtime.sendMessage({ type: 'SWGS_AUTO_UPDATE_NOW' });
+    if (r && r.applied) {
+      showUpdateStatus('✓ 새 버전 적용 — 재시작 중...', false);
+      toast(`✓ v${r.newVersion} 적용 → 재시작`, 'green');
+      // 백그라운드가 1초 후 chrome.runtime.reload() 실행 → 사이드 패널 자동 재로드
+    } else if (r && r.upToDate) {
+      showUpdateStatus(`✓ 이미 최신 (v${r.version})`, false);
+      toast('✓ 이미 최신 버전', 'green');
+      setTimeout(() => showUpdateStatus('', false), 4000);
+    } else {
+      showUpdateStatus('⚠ ' + ((r && r.err) || '확인 실패'), false);
+      toast('⚠ 업데이트 실패', 'red');
+    }
   };
   document.getElementById('btnLeaveOpen').onclick = () => chrome.tabs.create({ url: state.gwHost + '/leave' });
   document.getElementById('btnLeaveNew').onclick = () => chrome.tabs.create({ url: state.gwHost + '/leave?new=1' });

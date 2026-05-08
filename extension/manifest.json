@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Seastar Groupware - 사내 통합 도우미",
   "short_name": "Seastar GW",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "사원번호 로그인 · 연차/SEDMS 빠른 접근 · 영구 세션 · 활동 푸시 알림. SGW Seastar Work 연동 확장앱.",
   "minimum_chrome_version": "116",
   "update_url": "https://swgs-internal.pages.dev/updates.xml",

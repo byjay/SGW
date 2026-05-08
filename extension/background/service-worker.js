@@ -67,6 +67,43 @@ chrome.notifications.onClicked.addListener((nid) => {
   chrome.tabs.create({ url: host + path });
 });
 
+/* ════════ 원클릭 자동 업데이트 (사용자 클릭 1회 → 끝) ════════
+ * 1. version.json 폴링
+ * 2. 새 버전이면 chrome.runtime.requestUpdateCheck() 강제 → CRX 자동 다운로드
+ * 3. 다운로드 완료되면 chrome.runtime.reload() → 확장 자동 재시작
+ * 4. 사용자는 클릭 1회만, 다른 행동 없음
+ */
+async function autoUpdateNow() {
+  try {
+    const r = await fetch(UPDATE_URL + '?_=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return { ok: false, err: 'HTTP ' + r.status };
+    const j = await r.json();
+    const myVer = chrome.runtime.getManifest().version;
+    if (compareVer(j.version, myVer) <= 0) {
+      return { ok: true, upToDate: true, version: myVer };
+    }
+    // 새 버전 있음 — Chrome에 강제 업데이트 체크 + 자동 reload
+    return await new Promise((resolve) => {
+      if (!chrome.runtime.requestUpdateCheck) {
+        // 정책 미설치 unpacked 확장 — reload만 시도
+        setTimeout(() => chrome.runtime.reload(), 1500);
+        return resolve({ ok: true, applied: true, newVersion: j.version, fallback: 'reload' });
+      }
+      chrome.runtime.requestUpdateCheck((status, details) => {
+        if (status === 'update_available' || status === 'no_update') {
+          // 1.5초 후 자동 reload (CRX 적용)
+          setTimeout(() => chrome.runtime.reload(), 1500);
+          resolve({ ok: true, applied: true, newVersion: j.version, status });
+        } else {
+          resolve({ ok: false, err: 'update check status: ' + status });
+        }
+      });
+    });
+  } catch (e) {
+    return { ok: false, err: e.message };
+  }
+}
+
 /* ════════ 자동 업데이트 (CF Pages 빌드 → 즉시 적용) ════════ */
 async function checkUpdate(verbose = false) {
   try {
@@ -157,9 +194,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       checkUpdate(true).then(()=>sendResponse({ok:true})).catch(e=>sendResponse({ok:false, err:e.message}));
       return true;
     case 'SWGS_FORCE_RELOAD':
-      // ★ 즉시 확장 재로드 (다운로드된 새 버전 활성화)
       sendResponse({ok:true});
       setTimeout(() => chrome.runtime.reload(), 500);
+      return true;
+    case 'SWGS_AUTO_UPDATE_NOW':
+      // ★ 원클릭 자동 업데이트 (다운로드/팝업 없이 끝까지 한 번에)
+      autoUpdateNow().then(sendResponse).catch(e => sendResponse({ ok: false, err: e.message }));
       return true;
     case 'SWGS_LASTSEEN_SNAPSHOT':
       // content가 5초마다 보내는 last_seen_* 스냅샷 → 변화 감지
