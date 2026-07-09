@@ -44,7 +44,7 @@ export const APP_CONFIG = {
   
   // 외부 링크
   EXTERNAL: {
-    DMS_URL: 'http://dms.seastar.work',
+    DMS_URL: 'https://sedms.app',
   },
 } as const;
 

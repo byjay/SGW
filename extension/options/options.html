@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seastar GW — 설정</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel-2:#1c2128; --border:#30363d;
+    --text:#c9d1d9; --text-2:#8b949e; --blue:#2f81f7; --green:#3dc96b; --danger:#f85149;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,"Segoe UI",Pretendard,sans-serif;
+    margin:0;padding:24px;font-size:13px;line-height:1.5}
+  .wrap{max-width:560px;margin:0 auto}
+  h1{font-size:18px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .sub{color:var(--text-2);font-size:11px;margin-bottom:20px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:14px}
+  .card h2{font-size:12px;color:var(--text-2);font-weight:700;margin:0 0 12px;letter-spacing:.3px;text-transform:uppercase}
+  .row{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .row:last-child{margin-bottom:0}
+  label{font-size:11px;font-weight:600;color:var(--text)}
+  .desc{font-size:10px;color:var(--text-2)}
+  input[type=text],input[type=number],select{
+    background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    padding:9px 11px;border-radius:6px;font-size:13px;outline:none;width:100%}
+  input:focus,select:focus{border-color:var(--blue)}
+  .toggle{display:flex;align-items:center;gap:10px;cursor:pointer}
+  .toggle input{width:18px;height:18px;accent-color:var(--green)}
+  .actions{display:flex;gap:8px;margin-top:6px}
+  button{border:0;border-radius:6px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer}
+  .save{background:var(--blue);color:#fff}
+  .reset{background:transparent;color:var(--text);border:1px solid var(--border)}
+  #status{margin-top:12px;font-size:12px;min-height:18px;color:var(--green)}
+  code{background:var(--panel-2);padding:1px 5px;border-radius:3px;color:var(--blue);font-size:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>⭐ Seastar GW 설정</h1>
+  <div class="sub">확장앱 동작을 조정합니다. 변경 후 <b>저장</b>을 누르면 즉시 적용됩니다.</div>
+
+  <div class="card">
+    <h2>🌐 연결 주소</h2>
+    <div class="row">
+      <label for="gw_host">그룹웨어 주소 (SGW)</label>
+      <input type="text" id="gw_host" placeholder="https://sgw.seastar.work">
+      <div class="desc">사이드패널 메뉴·연차·결재가 여는 그룹웨어 기본 주소</div>
+    </div>
+    <div class="row">
+      <label for="sedms_host">SEDMS(전자문서) 주소</label>
+      <input type="text" id="sedms_host" placeholder="https://sedms.app">
+      <div class="desc">SEDMS 탭의 <code>SEDMS 열기</code> 버튼이 여는 주소</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🔔 알림</h2>
+    <div class="row">
+      <label class="toggle"><input type="checkbox" id="notifications_enabled"> OS 푸시 알림 사용</label>
+      <div class="desc">공지·연차·메시지·결재 도착 시 Windows 알림 표시</div>
+    </div>
+    <div class="row">
+      <label for="poll_interval_min">활동 확인 주기 (분)</label>
+      <input type="number" id="poll_interval_min" min="1" max="30" step="1">
+      <div class="desc">백그라운드에서 새 활동을 확인하는 간격 (기본 1분)</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="save" id="btnSave">💾 저장</button>
+    <button class="reset" id="btnReset">기본값 복원</button>
+  </div>
+  <div id="status"></div>
+</div>
+<script src="options.js" type="module"></script>
+</body>
+</html>

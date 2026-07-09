@@ -23,7 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# Extension build artifacts (ÀÚµ¿ ºôµå »êÃâ¹°)
+# Extension build artifacts (ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½â¹°)
 extension/_build/
 extension/_deploy/
 extension/.wrangler/
@@ -36,4 +36,39 @@ _keys/
 .keys/
 installer/_build/
 installer/_deploy/
+
+# Secrets / env
+.dev.vars
+.env
+.env.*.local
+
+# Tooling / local state
+.bkit/
+.claude/
+.wrangler/
+wrangler.log
+
+# Working docs (local only)
+AGENT_TASK_BRIEF.md
+WORK_ORDER_*.md
+í™•ìž¥ì•±.MD
+
+# Extension share export (build artifact)
+extension/_share/
+
+# Flutter build output
+sgw_flutter/build/
+sgw_flutter/.dart_tool/
+
+# Duplicate root logos (keep public/ copies only)
+/seastar-logo.png
+/seastar-groupware-logo.png
+
+# Root junk screenshots
+/image.png
+/image-*.png
+
+# Non-SGW / legacy folders (not part of this repo's source)
+sgw_flutter/
+sgwextensionv0.1.0/
 

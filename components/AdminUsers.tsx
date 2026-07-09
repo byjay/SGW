@@ -33,9 +33,16 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
   const [editTotalLeave, setEditTotalLeave] = React.useState('');
   const [editLeaveBalance, setEditLeaveBalance] = React.useState('');
 
+  // ★ 체크박스 선택 + 일괄적용 (2026-07-03 마스터 지시)
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
+  const [bulkLeaveValue, setBulkLeaveValue] = React.useState('19');
+  const [bulkApplying, setBulkApplying] = React.useState(false);
+
   // 사용자 추가 관련 상태
   const [newId, setNewId] = React.useState('');
   const [newName, setNewName] = React.useState('');
+  const [newEmail, setNewEmail] = React.useState('');
+  const [newPhone, setNewPhone] = React.useState('');
   const [newDept, setNewDept] = React.useState('');
   const [newPos, setNewPos] = React.useState('');
   const [newRole, setNewRole] = React.useState<'user' | 'admin' | 'manager'>('user');
@@ -66,7 +73,8 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
       await MockServer.createUser({
         id: newId,
         name: newName,
-        email: `${newId}@seastargo.com`,
+        email: newEmail || `${newId}@seastargo.com`,
+        phone: newPhone,
         role: newRole,
         department: newDept || '미지정',
         position: newPos || '사원',
@@ -76,6 +84,8 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
       setShowModal(false);
       setNewId('');
       setNewName('');
+      setNewEmail('');
+      setNewPhone('');
       setNewDept('');
       setNewPos('');
       setNewRole('user');
@@ -128,14 +138,48 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
     }
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredUsers.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredUsers.map(u => u.id)));
+    }
+  };
+
+  const handleBulkLeaveApply = async () => {
+    const val = parseFloat(bulkLeaveValue);
+    if (isNaN(val)) { alert('숫자를 입력해주세요.'); return; }
+    if (selectedIds.size === 0) { alert('먼저 대상을 선택해주세요.'); return; }
+    if (!confirm(`선택한 ${selectedIds.size}명의 총 연차/잔여 연차를 ${val}일로 일괄 적용하시겠습니까?`)) return;
+    setBulkApplying(true);
+    try {
+      await Promise.all(Array.from(selectedIds).map(id =>
+        MockServer.updateUser(id, { totalLeave: val, leaveBalance: val })
+      ));
+      setSelectedIds(new Set());
+      await loadData();
+      alert('일괄 적용이 완료되었습니다.');
+    } finally {
+      setBulkApplying(false);
+    }
+  };
+
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (u.department && u.department.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  if (currentUser.id !== '5') {
-    return <div className="p-8 text-center text-red-500">접근 권한이 없습니다. 시스템 설정은 최고 관리자만 접근 가능합니다.</div>;
+  if (currentUser.role !== 'admin') {
+    return <div className="p-8 text-center text-red-500">접근 권한이 없습니다. 시스템 설정은 관리자만 접근 가능합니다.</div>;
   }
 
   return (
@@ -145,17 +189,17 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
           <h2 className="text-2xl font-bold text-slate-800">시스템 설정</h2>
           <p className="text-slate-500 text-sm">시스템 사용자를 관리하고 모든 활동 로그를 모니터링합니다.</p>
         </div>
-        <div className="flex gap-2">
-          <div className="bg-slate-100 p-1 rounded-xl flex mr-4">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <div className="bg-slate-100 p-1 rounded-xl flex shrink-0">
             <button
               onClick={() => setActiveTab('users')}
-              className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-3 md:px-4 py-1.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'users' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               사용자 관리
             </button>
             <button
               onClick={() => setActiveTab('logs')}
-              className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'logs' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-3 md:px-4 py-1.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'logs' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               활동 로그
             </button>
@@ -164,16 +208,16 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
             <>
               <button
                 onClick={handleBulkPasswordChange}
-                className="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-bold border border-red-200 flex items-center space-x-2"
+                className="bg-red-50 hover:bg-red-100 text-red-600 px-3 md:px-4 py-2 rounded-lg font-bold border border-red-200 flex items-center gap-1.5 shrink-0 whitespace-nowrap text-sm"
               >
-                <KeyRound size={18} />
-                <span className="text-sm">PW 일괄변경</span>
+                <KeyRound size={16} />
+                <span>PW 일괄변경</span>
               </button>
               <button
                 onClick={() => setShowModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-md shadow-blue-600/20 flex items-center space-x-2"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 md:px-4 py-2 rounded-lg font-bold shadow-md shadow-blue-600/20 flex items-center gap-1.5 shrink-0 whitespace-nowrap text-sm"
               >
-                <Plus size={18} />
+                <Plus size={16} />
                 <span>사용자 추가</span>
               </button>
             </>
@@ -196,13 +240,46 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
               />
             </div>
           </div>
+          {/* ★ 일괄적용 바 — 선택된 인원이 있을 때만 표시 */}
+          {selectedIds.size > 0 && (
+            <div className="p-3 border-b border-blue-100 bg-blue-50 flex flex-wrap items-center gap-3">
+              <span className="text-sm font-bold text-blue-700">{selectedIds.size}명 선택됨</span>
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-bold text-slate-500">연차 일괄적용</label>
+                <input
+                  type="number" step="0.5"
+                  value={bulkLeaveValue}
+                  onChange={e => setBulkLeaveValue(e.target.value)}
+                  className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
+                />
+                <span className="text-xs text-slate-400">일 (총/잔여 동일 적용)</span>
+              </div>
+              <button
+                onClick={handleBulkLeaveApply}
+                disabled={bulkApplying}
+                className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm shadow-sm disabled:opacity-50"
+              >
+                {bulkApplying ? '적용 중...' : '일괄 적용'}
+              </button>
+              <button onClick={() => setSelectedIds(new Set())} className="text-xs text-slate-400 hover:text-slate-600 font-bold">선택 해제</button>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[1000px]">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider">
+                  <th className="p-4 font-bold w-10">
+                    <input
+                      type="checkbox"
+                      checked={filteredUsers.length > 0 && selectedIds.size === filteredUsers.length}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 accent-blue-600 cursor-pointer"
+                    />
+                  </th>
                   <th className="p-4 font-bold">프로필</th>
                   <th className="p-4 font-bold">ID</th>
                   <th className="p-4 font-bold">이름</th>
+                  <th className="p-4 font-bold">이메일</th>
                   <th className="p-4 font-bold">직급</th>
                   <th className="p-4 font-bold">부서</th>
                   <th className="p-4 font-bold">권한</th>
@@ -212,10 +289,18 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {loading ? (
-                  <tr><td colSpan={8} className="p-8 text-center text-slate-400">로딩중...</td></tr>
+                  <tr><td colSpan={9} className="p-8 text-center text-slate-400">로딩중...</td></tr>
                 ) : (
                   filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-slate-50 transition-colors text-sm text-slate-700">
+                    <tr key={user.id} className={`hover:bg-slate-50 transition-colors text-sm text-slate-700 ${selectedIds.has(user.id) ? 'bg-blue-50/50' : ''}`}>
+                      <td className="p-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(user.id)}
+                          onChange={() => toggleSelect(user.id)}
+                          className="w-4 h-4 accent-blue-600 cursor-pointer"
+                        />
+                      </td>
                       <td className="p-4">
                         <div className="relative inline-block">
                           <img src={user.avatar} className="w-10 h-10 rounded-full border border-slate-100" />
@@ -227,41 +312,73 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
                       <td className="p-4 font-medium text-slate-500">{user.id}</td>
                       <td className="p-4">
                         {editingUserId === user.id ? (
-                          <input
-                            className="px-2 py-1 border border-blue-400 rounded w-24 text-sm"
-                            value={editForm.name || ''}
-                            onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                          />
+                          <div className="flex flex-col gap-1">
+                            <input
+                              className="px-2 py-1 border border-blue-400 rounded w-full text-sm"
+                              value={editForm.name || ''}
+                              onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                              placeholder="이름"
+                            />
+                            <input
+                              className="px-2 py-1 border border-blue-400 rounded w-full text-xs"
+                              value={editForm.phone || ''}
+                              onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                              placeholder="연락처"
+                            />
+                          </div>
                         ) : (
-                          <span className="font-bold text-slate-800">{user.name}</span>
+                          <div className="flex items-center gap-1 group cursor-pointer" onClick={() => startEditing(user)}>
+                            <span className="font-bold text-slate-800">{user.name}</span>
+                            <Edit3 size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
                         )}
                       </td>
                       <td className="p-4">
                         {editingUserId === user.id ? (
                           <input
-                            className="px-2 py-1 border border-blue-400 rounded w-20 text-sm"
+                            className="px-2 py-1 border border-blue-400 rounded w-full text-sm"
+                            value={editForm.email || ''}
+                            onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                          />
+                        ) : (
+                          <div className="flex items-center gap-1 group cursor-pointer" onClick={() => startEditing(user)}>
+                            <span className="text-slate-500 text-xs">{user.email}</span>
+                            <Edit3 size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {editingUserId === user.id ? (
+                          <input
+                            className="px-2 py-1 border border-blue-400 rounded w-full text-sm"
                             value={editForm.position || ''}
                             onChange={e => setEditForm({ ...editForm, position: e.target.value })}
                           />
                         ) : (
-                          <span className="text-blue-600 font-medium">{user.position}</span>
+                          <div className="flex items-center gap-1 group cursor-pointer" onClick={() => startEditing(user)}>
+                            <span className="text-blue-600 font-medium">{user.position}</span>
+                            <Edit3 size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
                         )}
                       </td>
                       <td className="p-4">
                         {editingUserId === user.id ? (
                           <input
-                            className="px-2 py-1 border border-blue-400 rounded w-24 text-sm"
+                            className="px-2 py-1 border border-blue-400 rounded w-full text-sm"
                             value={editForm.department || ''}
                             onChange={e => setEditForm({ ...editForm, department: e.target.value })}
                           />
                         ) : (
-                          <span>{user.department}</span>
+                          <div className="flex items-center gap-1 group cursor-pointer" onClick={() => startEditing(user)}>
+                            <span>{user.department}</span>
+                            <Edit3 size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
                         )}
                       </td>
                       <td className="p-4">
                         {editingUserId === user.id ? (
                           <select
-                            className="px-2 py-1 border border-blue-400 rounded text-sm"
+                            className="px-2 py-1 border border-blue-400 rounded text-sm w-full"
                             value={editForm.role}
                             onChange={e => setEditForm({ ...editForm, role: e.target.value as any })}
                           >
@@ -270,11 +387,14 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
                             <option value="admin">ADMIN</option>
                           </select>
                         ) : (
-                          <span className={`px-2 py-1 rounded text-[10px] font-black tracking-tighter ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' :
-                            user.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
-                            }`}>
-                            {user.role.toUpperCase()}
-                          </span>
+                          <div className="flex items-center gap-1 group cursor-pointer" onClick={() => startEditing(user)}>
+                            <span className={`px-2 py-1 rounded text-[10px] font-black tracking-tighter ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                              user.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                              }`}>
+                              {user.role.toUpperCase()}
+                            </span>
+                            <Edit3 size={10} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
                         )}
                       </td>
                       <td className="p-4">
@@ -365,22 +485,32 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ currentUser }) => {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative z-10 p-6">
             <h3 className="text-xl font-bold mb-6">사용자 추가</h3>
             <form onSubmit={handleAddUser} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">ID</label>
-                <input value={newId} onChange={e => setNewId(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none focus:border-blue-500" required />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">ID</label>
+                  <input value={newId} onChange={e => setNewId(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none focus:border-blue-500" required placeholder="사번" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">이름</label>
+                  <input value={newName} onChange={e => setNewName(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none focus:border-blue-500" required placeholder="성명" />
+                </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">이름</label>
-                <input value={newName} onChange={e => setNewName(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none focus:border-blue-500" required />
+                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">이메일</label>
+                <input value={newEmail} onChange={e => setNewEmail(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="example@seastargo.com" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">연락처</label>
+                <input value={newPhone} onChange={e => setNewPhone(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="010-0000-0000" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">직급</label>
-                  <input value={newPos} onChange={e => setNewPos(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none" placeholder="사원/주임/부장 등" />
+                  <input value={newPos} onChange={e => setNewPos(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="사원/주임/부장 등" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">부서</label>
-                  <input value={newDept} onChange={e => setNewDept(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none" placeholder="서무/전장 등" />
+                  <input value={newDept} onChange={e => setNewDept(e.target.value)} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="서무/전장 등" />
                 </div>
               </div>
               <div>

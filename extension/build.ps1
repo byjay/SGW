@@ -1,4 +1,4 @@
-# Seastar GW Extension - Build
+﻿# Seastar GW Extension - Build
 $ErrorActionPreference = "Stop"
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BUILDDIR = Join-Path $ROOT "_build"
@@ -10,7 +10,7 @@ $zipPath = Join-Path $BUILDDIR $zipName
 if (-not (Test-Path $BUILDDIR)) { New-Item -ItemType Directory -Path $BUILDDIR | Out-Null }
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 
-$includePatterns = @('manifest.json', 'background/*', 'content/*', 'icons/icon-*.png', 'lib/*', 'sidepanel/*')
+$includePatterns = @('manifest.json', 'background/*', 'content/*', 'icons/icon-*.png', 'lib/*', 'sidepanel/*', 'options/*')
 
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem

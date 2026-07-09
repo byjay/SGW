@@ -1,8 +1,7 @@
 import React from 'react';
 import { User, ViewState } from '../types';
-import { LogOut, LayoutGrid, MessageSquare, Menu, X, Calendar, Shield, FileCheck, Home, Calendar as CalendarIcon, Mail, ExternalLink, Archive, Layers, Key } from 'lucide-react';
+import { LogOut, LayoutGrid, MessageSquare, MessageCircle, Menu, X, Calendar, Shield, FileCheck, Home, Calendar as CalendarIcon, Mail, ExternalLink, Archive, Layers, Key, Camera, Save, UserCog, Sun, Moon, Link2 } from 'lucide-react';
 import logoImage from '../logo.jpg';
-import { LoginPopup } from './LoginPopup';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -30,9 +29,69 @@ export const Layout: React.FC<LayoutProps> = ({
   const [confirmPassword, setConfirmPassword] = React.useState('');
   const [passwordError, setPasswordError] = React.useState('');
 
+  // ── 테마 토글 (dark=SEcMS 그린 / cream=Sonnet5 크림·클레이) ──
+  const [theme, setTheme] = React.useState(() => localStorage.getItem('app_theme') || 'dark');
+  React.useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('app_theme', theme);
+  }, [theme]);
+
+  // 내 정보(프로필) 수정
+  const [showProfileModal, setShowProfileModal] = React.useState(false);
+  const [profilePhone, setProfilePhone] = React.useState('');
+  const [profileDept, setProfileDept] = React.useState('');
+  const [avatarData, setAvatarData] = React.useState('');
+  const [savingProfile, setSavingProfile] = React.useState(false);
+
   if (!currentUser) {
     return <div className="min-h-screen">{children}</div>;
   }
+
+  const openProfile = () => {
+    setProfilePhone(currentUser.phone || '');
+    setProfileDept(currentUser.department || '');
+    setAvatarData(currentUser.avatar || '');
+    setShowProfileModal(true);
+  };
+
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { alert('이미지 파일만 업로드할 수 있습니다.'); return; }
+    if (file.size > 8 * 1024 * 1024) { alert('이미지는 8MB 이하만 가능합니다.'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        // 256px 정사각형으로 축소 (localStorage 절약 + 일관된 아바타)
+        const SIZE = 256;
+        const canvas = document.createElement('canvas');
+        canvas.width = SIZE; canvas.height = SIZE;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { setAvatarData(String(reader.result)); return; }
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
+        setAvatarData(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const { MockServer } = await import('../services/mockServer');
+      await MockServer.updateUser(currentUser.id, { phone: profilePhone, department: profileDept, avatar: avatarData });
+      setShowProfileModal(false);
+      window.location.reload(); // 사진/정보 즉시 반영
+    } catch (err) {
+      alert('저장 중 오류가 발생했습니다.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank');
@@ -118,6 +177,7 @@ export const Layout: React.FC<LayoutProps> = ({
 
       <NavItem view="board" icon={LayoutGrid} label="게시판" />
       <NavItem view="messages" icon={MessageSquare} label="쪽지함 (조직도)" badge={unreadCount > 0 ? unreadCount : undefined} />
+      <NavItem view="chat" icon={MessageCircle} label="채팅" />
 
       <div className="pt-4 pb-2">
         <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">업무 관리</p>
@@ -125,8 +185,8 @@ export const Layout: React.FC<LayoutProps> = ({
       <NavItem view="calendar" icon={CalendarIcon} label="일정 캘린더" />
       <NavItem view="approval" icon={FileCheck} label="전자 결재" />
 
-      {/* Only Kim Bongjung (ID: 5) can see admin menu */}
-      {currentUser.id === '5' && (
+      {/* 관리자(role=admin)만 관리 메뉴 노출 — 전권 */}
+      {currentUser.role === 'admin' && (
         <>
           <div className="pt-4 pb-2">
             <p className="px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">관리자</p>
@@ -139,37 +199,63 @@ export const Layout: React.FC<LayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row relative">
+      {/* ── 테마 전환 아이콘 (다크 그린 ↔ 크림 클레이) — 전 화면 공통 ── */}
+      <button
+        onClick={() => setTheme(t => (t === 'dark' ? 'cream' : 'dark'))}
+        title={theme === 'dark' ? '크림 테마로 전환' : '다크 테마로 전환'}
+        className="fixed top-3 right-3 z-[60] w-9 h-9 rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center text-slate-500 hover:scale-110 transition-transform"
+      >
+        {theme === 'dark' ? <Sun size={17} className="text-amber-500" /> : <Moon size={17} className="text-indigo-500" />}
+      </button>
       {/* Mobile Bottom Navigation Bar - Placed at top for priority rendering */}
+      {/* ★ 모바일 전 기능 접근 (2026-07-09): 핵심 5탭 + 전체(더보기 = 햄버거 오버레이) */}
       {currentUser && (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.2)] z-[9999]">
-          <div className="flex items-center justify-around h-16 px-2">
+          <div className="flex items-stretch justify-around h-16 px-1">
             <button
               onClick={() => onNavigate('home')}
-              className={`flex flex-col items-center gap-1 flex-1 ${currentView === 'home' ? 'text-[#135bec]' : 'text-slate-400'} transition-colors`}
+              className={`flex flex-col items-center justify-center gap-1 flex-1 ${currentView === 'home' ? 'text-[#135bec]' : 'text-slate-400'} transition-colors`}
             >
               <Home className="w-5 h-5" fill={currentView === 'home' ? 'currentColor' : 'none'} />
-              <span className="text-[10px] font-extrabold">홈</span>
-            </button>
-            <button
-              onClick={() => onNavigate('leave')}
-              className={`flex flex-col items-center gap-1 flex-1 ${currentView === 'leave' ? 'text-pink-600' : 'text-slate-400'} transition-colors`}
-            >
-              <Calendar className="w-5 h-5" fill={currentView === 'leave' ? 'currentColor' : 'none'} />
-              <span className="text-[10px] font-extrabold">연차</span>
+              <span className="text-[9px] font-extrabold">홈</span>
             </button>
             <button
               onClick={() => onNavigate('board')}
-              className={`flex flex-col items-center gap-1 flex-1 ${currentView === 'board' ? 'text-[#135bec]' : 'text-slate-400'} transition-colors`}
+              className={`flex flex-col items-center justify-center gap-1 flex-1 ${currentView === 'board' ? 'text-indigo-600' : 'text-slate-400'} transition-colors`}
             >
               <LayoutGrid className="w-5 h-5" fill={currentView === 'board' ? 'currentColor' : 'none'} />
-              <span className="text-[10px] font-extrabold">게시판</span>
+              <span className="text-[9px] font-extrabold">게시판</span>
             </button>
             <button
               onClick={() => onNavigate('messages')}
-              className={`flex flex-col items-center gap-1 flex-1 ${currentView === 'messages' ? 'text-[#135bec]' : 'text-slate-400'} transition-colors`}
+              className={`relative flex flex-col items-center justify-center gap-1 flex-1 ${currentView === 'messages' ? 'text-[#135bec]' : 'text-slate-400'} transition-colors`}
             >
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1/2 translate-x-4 bg-red-500 text-white text-[8px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-1">{unreadCount}</span>
+              )}
               <MessageSquare className="w-5 h-5" fill={currentView === 'messages' ? 'currentColor' : 'none'} />
-              <span className="text-[10px] font-extrabold">쪽지함</span>
+              <span className="text-[9px] font-extrabold">쪽지</span>
+            </button>
+            <button
+              onClick={() => onNavigate('chat')}
+              className={`flex flex-col items-center justify-center gap-1 flex-1 ${currentView === 'chat' ? 'text-teal-600' : 'text-slate-400'} transition-colors`}
+            >
+              <MessageCircle className="w-5 h-5" fill={currentView === 'chat' ? 'currentColor' : 'none'} />
+              <span className="text-[9px] font-extrabold">채팅</span>
+            </button>
+            <button
+              onClick={() => onNavigate('leave')}
+              className={`flex flex-col items-center justify-center gap-1 flex-1 ${currentView === 'leave' ? 'text-pink-600' : 'text-slate-400'} transition-colors`}
+            >
+              <Calendar className="w-5 h-5" fill={currentView === 'leave' ? 'currentColor' : 'none'} />
+              <span className="text-[9px] font-extrabold">연차</span>
+            </button>
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className={`flex flex-col items-center justify-center gap-1 flex-1 ${isMobileMenuOpen ? 'text-[#135bec]' : 'text-slate-400'} transition-colors`}
+            >
+              <Menu className="w-5 h-5" />
+              <span className="text-[9px] font-extrabold">전체</span>
             </button>
           </div>
         </nav>
@@ -178,7 +264,9 @@ export const Layout: React.FC<LayoutProps> = ({
       {/* Sidebar for Desktop */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-6 fixed h-full z-10 overflow-y-auto">
         <div className="flex items-center mb-10 px-2 cursor-pointer" onClick={() => onNavigate('home')}>
-          <img src={logoImage} alt="SEASTAR Logo" className="w-full max-w-[200px] h-auto object-contain" />
+          <div className="bg-white keep-white rounded-xl px-3 py-2 w-full">
+            <img src={logoImage} alt="SEASTAR Logo" className="w-full max-w-[200px] h-auto object-contain" />
+          </div>
         </div>
 
         <nav className="space-y-1 mb-8">
@@ -223,11 +311,30 @@ export const Layout: React.FC<LayoutProps> = ({
             </div>
           </div>
           <button
+            onClick={openProfile}
+            className="flex items-center space-x-3 w-full px-4 py-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm mb-1"
+          >
+            <UserCog size={16} />
+            <span>내 정보 수정 (사진/연락처)</span>
+          </button>
+          <button
             onClick={() => setShowPasswordModal(true)}
             className="flex items-center space-x-3 w-full px-4 py-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm mb-1"
           >
             <Key size={16} />
             <span>비밀번호 변경</span>
+          </button>
+          <button
+            onClick={() => {
+              if (!currentUser) return;
+              window.location.href =
+                '/auth/google/login?link=1&email=' + encodeURIComponent(currentUser.email) +
+                '&name=' + encodeURIComponent(currentUser.name);
+            }}
+            className="flex items-center space-x-3 w-full px-4 py-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm mb-1"
+          >
+            <Link2 size={16} />
+            <span>구글 계정 연동</span>
           </button>
           <button
             onClick={onLogout}
@@ -247,7 +354,9 @@ export const Layout: React.FC<LayoutProps> = ({
       {/* Mobile Header */}
       <div className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => onNavigate('home')}>
-          <img src={logoImage} alt="SEASTAR Logo" className="h-8 w-auto object-contain" />
+          <div className="bg-white keep-white rounded-lg px-2 py-1">
+            <img src={logoImage} alt="SEASTAR Logo" className="h-8 w-auto object-contain" />
+          </div>
         </div>
         <div className="flex items-center space-x-2">
           {unreadCount > 0 && (
@@ -267,7 +376,7 @@ export const Layout: React.FC<LayoutProps> = ({
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 bg-white z-50 pt-20 px-6 pb-6 flex flex-col animate-fade-in overflow-y-auto">
+        <div className="md:hidden fixed inset-0 bg-white z-50 pt-20 px-6 pb-24 flex flex-col animate-fade-in overflow-y-auto">
           <nav className="flex-1 space-y-2">
             <NavigationContent />
           </nav>
@@ -313,6 +422,19 @@ export const Layout: React.FC<LayoutProps> = ({
               <span>비밀번호 변경</span>
             </button>
             <button
+              onClick={() => {
+                if (!currentUser) return;
+                setIsMobileMenuOpen(false);
+                window.location.href =
+                  '/auth/google/login?link=1&email=' + encodeURIComponent(currentUser.email) +
+                  '&name=' + encodeURIComponent(currentUser.name);
+              }}
+              className="w-full flex items-center justify-center space-x-2 bg-blue-50 text-blue-600 hover:bg-blue-100 py-3 rounded-xl font-medium transition-colors mb-2"
+            >
+              <Link2 size={18} />
+              <span>구글 계정 연동</span>
+            </button>
+            <button
               onClick={onLogout}
               className="w-full flex items-center justify-center space-x-2 bg-red-50 text-red-600 hover:bg-red-100 py-3 rounded-xl font-medium transition-colors"
             >
@@ -339,6 +461,57 @@ export const Layout: React.FC<LayoutProps> = ({
       </main>
 
       {/* Password Change Modal */}
+      {/* ── 내 정보(프로필) 수정 모달 ── */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowProfileModal(false)}></div>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm relative z-10 animate-fade-in overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-slate-800">내 정보 수정</h3>
+              <button onClick={() => setShowProfileModal(false)} className="text-slate-400 hover:text-slate-800">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-6 space-y-5">
+              {/* 프로필 사진 */}
+              <div className="flex flex-col items-center gap-3">
+                <div className="relative">
+                  <img src={avatarData || currentUser.avatar} alt="" className="w-24 h-24 rounded-full object-cover border-4 border-slate-100 shadow" />
+                  <label className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full cursor-pointer shadow-lg" title="사진 변경">
+                    <Camera size={16} />
+                    <input type="file" accept="image/*" className="hidden" onChange={handleAvatarFile} />
+                  </label>
+                </div>
+                <p className="text-xs text-slate-400">사진을 클릭해 변경 (2MB 이하 이미지)</p>
+                <div className="text-center">
+                  <p className="text-base font-bold text-slate-800">{currentUser.name}</p>
+                  <p className="text-xs text-slate-500">{currentUser.position} · {currentUser.email}</p>
+                </div>
+              </div>
+              {/* 연락처 */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">연락처</label>
+                <input type="tel" value={profilePhone} onChange={e => setProfilePhone(e.target.value)}
+                  placeholder="010-0000-0000"
+                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              {/* 부서 */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">부서</label>
+                <input type="text" value={profileDept} onChange={e => setProfileDept(e.target.value)}
+                  placeholder="예: 배관 / 전장 / 임원"
+                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <button onClick={handleSaveProfile} disabled={savingProfile}
+                className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                <Save size={16} /> {savingProfile ? '저장 중...' : '저장'}
+              </button>
+              <p className="text-[11px] text-slate-400 text-center">이름·이메일·직급은 관리자만 변경할 수 있습니다.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showPasswordModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowPasswordModal(false)}></div>

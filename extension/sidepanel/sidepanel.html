@@ -4,81 +4,82 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Seastar GW</title>
+<link rel="icon" type="image/png" href="../icons/icon-48.png">
 <link rel="stylesheet" href="sidepanel.css">
 </head>
 <body>
 
-<!-- Login screen — SGW 페이지로 위임 -->
+<!-- ════════ 로그인 화면 — 그룹웨어 실제 로그인 페이지를 그대로 내장 (2중 로그인 방지) ════════ -->
 <div id="loginScreen" class="login-screen">
-  <div class="logo-block">
-    <div class="logo-mark">⭐</div>
-    <div class="logo-name">SEASTAR GW</div>
-    <div class="logo-sub">사원번호로 그룹웨어 로그인</div>
+  <div class="login-frame-toolbar">
+    <span class="mark"><svg viewBox="0 0 24 24"><defs><linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3ecf8e"/><stop offset="100%" stop-color="#27b074"/></linearGradient></defs><path fill="url(#gA)" d="M12 2 13.8 9 21 12 13.8 15 12 22 10.2 15 3 12 10.2 9Z"/></svg></span>
+    <span class="name">씨스타 그룹웨어</span>
+    <button class="mini-btn" id="btnLoginReload" title="새로고침"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg></button>
+    <button class="mini-btn wide" id="btnOpenGW" title="브라우저 탭으로 열기"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg> 브라우저로</button>
   </div>
-  <button class="btn-primary" id="btnOpenGW" style="width:100%;max-width:280px;padding:14px">
-    🌐 그룹웨어 열기 (sgw-seastar-work.pages.dev)
-  </button>
-  <div class="login-hint">
-    그룹웨어 페이지에서 사원번호로 로그인하면<br>
-    이 확장앱에 자동 반영됩니다 (영구 유지)
-  </div>
-  <details style="margin-top:14px;font-size:10px;color:#8b949e">
-    <summary>고급: 직접 입력</summary>
-    <form id="loginForm" style="margin-top:8px">
-      <label>사원번호</label>
-      <input type="text" id="empNum" placeholder="예: 2024001" required>
-      <button type="submit" class="btn-ghost" style="margin-top:6px">수동 등록</button>
-    </form>
-  </details>
-  <div id="loginError" class="login-err"></div>
+  <iframe id="loginFrame" title="Seastar Groupware 로그인" allow="clipboard-read; clipboard-write"></iframe>
 </div>
 
-<!-- Main app (after login) -->
+<!-- ════════ 메인 앱 (로그인 후) ════════ -->
 <div id="app" class="app" style="display:none">
   <header class="topbar">
     <div class="logo-mini">
-      <span class="mark">⭐</span>
+      <span class="mark"><svg viewBox="0 0 24 24"><defs><linearGradient id="gB" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3ecf8e"/><stop offset="100%" stop-color="#27b074"/></linearGradient></defs><path fill="url(#gB)" d="M12 2 13.8 9 21 12 13.8 15 12 22 10.2 15 3 12 10.2 9Z"/></svg></span>
       <div>
-        <div class="name">SEASTAR GW</div>
+        <div class="name">씨스타 그룹웨어</div>
         <div class="sub" id="userInfo">- · 미로그인</div>
       </div>
     </div>
-    <button class="icon-btn" id="btnRefresh" title="활동 새로고침">🔄</button>
-    <button class="icon-btn" id="btnLogout" title="로그아웃">🚪</button>
+    <button class="icon-btn" id="btnRefresh" title="활동 새로고침"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg></button>
+    <button class="icon-btn" id="btnLogout" title="로그아웃"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></button>
+    <button class="icon-btn" id="btnCloseSide" title="사이드패널 닫기"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
   </header>
 
   <!-- Tab nav -->
   <nav class="tab-nav">
-    <button class="tab-btn active" data-tab="activity">
-      🔔 알림 <span class="badge" id="badgeAll">0</span>
+    <button class="tab-btn active" data-tab="app"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/></svg> 앱</button>
+    <button class="tab-btn" data-tab="activity">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 4 1.5 5.5 2 6H4c.5-.5 2-2 2-6"/><path d="M10 19a2 2 0 0 0 4 0"/></svg> 알림 <span class="badge" id="badgeAll">0</span>
     </button>
-    <button class="tab-btn" data-tab="menu">📋 메뉴</button>
-    <button class="tab-btn" data-tab="leave">🌴 연차</button>
-    <button class="tab-btn" data-tab="sedms">📂 SEDMS</button>
+    <button class="tab-btn" data-tab="menu"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg> 메뉴</button>
   </nav>
+  <!-- ★ "연차"·"SEDMS" 전용 탭은 제거됨 — 메뉴 탭의 카드가 같은 목적지를 열고,
+       "앱" 탭 안에서는 그룹웨어 자체의 하단 네비(연차/메신저)로 이동 가능해 중복이었음. -->
+
+  <!-- Tab 0: 앱 (그룹웨어 전체를 확장앱 안에서) -->
+  <div class="tab-pane active app-pane" data-tab="app">
+    <div class="app-toolbar">
+      <button class="mini-btn" id="btnFrameBack" title="뒤로"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <button class="mini-btn" id="btnFrameHome" title="홈"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/></svg></button>
+      <button class="mini-btn" id="btnFrameReload" title="새로고침"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg></button>
+      <span class="app-toolbar-title">씨스타 그룹웨어</span>
+      <button class="mini-btn wide" id="btnOpenFull" title="전체 페이지로 이동"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/></svg> 전체화면</button>
+    </div>
+    <iframe id="appFrame" title="Seastar Groupware" allow="clipboard-read; clipboard-write"></iframe>
+  </div>
 
   <!-- Tab 1: 알림/활동 -->
-  <div class="tab-pane active" data-tab="activity">
+  <div class="tab-pane" data-tab="activity">
     <section class="sec">
       <div class="sec-h">📊 신규 알림 카운트</div>
       <div class="counts-grid">
         <div class="cnt-card notice">
-          <div class="cnt-icon">📢</div>
+          <div class="cnt-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h2l4 4v-14l-4 4H4a1 1 0 0 0-1 1Z"/><path d="M17 8a4 4 0 0 1 0 8"/><path d="M20 5a8 8 0 0 1 0 14"/></svg></div>
           <div class="cnt-l">공지</div>
           <div class="cnt-v" id="cntNotice">0</div>
         </div>
         <div class="cnt-card leave">
-          <div class="cnt-icon">🌴</div>
+          <div class="cnt-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/></svg></div>
           <div class="cnt-l">연차</div>
           <div class="cnt-v" id="cntLeave">0</div>
         </div>
         <div class="cnt-card msg">
-          <div class="cnt-icon">💬</div>
+          <div class="cnt-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4z"/></svg></div>
           <div class="cnt-l">메시지</div>
           <div class="cnt-v" id="cntMessage">0</div>
         </div>
         <div class="cnt-card approval">
-          <div class="cnt-icon">✍️</div>
+          <div class="cnt-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div>
           <div class="cnt-l">결재</div>
           <div class="cnt-v" id="cntApproval">0</div>
         </div>
@@ -92,49 +93,45 @@
     </section>
   </div>
 
-  <!-- Tab 1.5: 전체 메뉴 (SGW 8개 페이지 빠른 접근) -->
+  <!-- Tab 2: 전체 메뉴 -->
   <div class="tab-pane" data-tab="menu">
     <section class="sec">
-      <div class="sec-h">📋 SGW 전체 메뉴 — 클릭 시 해당 페이지 새 탭으로 열림</div>
+      <div class="sec-h">📋 SGW 전체 메뉴 — 그룹웨어 탭 재사용(탭 중복 방지)</div>
       <div class="menu-grid">
         <button class="menu-card" data-go="/">
-          <div class="mi">🏠</div><div class="ml">홈</div>
+          <div class="mi"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/></svg></div><div class="ml">홈</div>
           <div class="md">대시보드</div>
         </button>
         <button class="menu-card" data-go="/board">
-          <div class="mi">📢</div><div class="ml">공지/게시판</div>
+          <div class="mi"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h2l4 4v-14l-4 4H4a1 1 0 0 0-1 1Z"/><path d="M17 8a4 4 0 0 1 0 8"/><path d="M20 5a8 8 0 0 1 0 14"/></svg></div><div class="ml">공지/게시판</div>
           <div class="md">사내 공지</div>
         </button>
-        <button class="menu-card" data-go="/messages">
-          <div class="mi">💬</div><div class="ml">메시지</div>
-          <div class="md">DM/그룹</div>
-        </button>
-        <button class="menu-card" data-go="/chat">
-          <div class="mi">💭</div><div class="ml">채팅</div>
-          <div class="md">실시간 채팅</div>
+        <button class="menu-card" data-go="/messages" data-popup="1">
+          <div class="mi"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4z"/></svg></div><div class="ml">메신저</div>
+          <div class="md">쪽지·채팅</div>
         </button>
         <button class="menu-card" data-go="/leave">
-          <div class="mi">🌴</div><div class="ml">연차</div>
+          <div class="mi"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/></svg></div><div class="ml">연차</div>
           <div class="md">신청/관리</div>
         </button>
         <button class="menu-card" data-go="/approval">
-          <div class="mi">✍️</div><div class="ml">결재</div>
+          <div class="mi"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></div><div class="ml">결재</div>
           <div class="md">전자결재</div>
         </button>
         <button class="menu-card" data-go="/calendar">
-          <div class="mi">📅</div><div class="ml">캘린더</div>
+          <div class="mi"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div><div class="ml">캘린더</div>
           <div class="md">일정</div>
         </button>
-        <button class="menu-card" data-go="https://m193.mailplug.com/member/login" data-ext="1">
-          <div class="mi">📧</div><div class="ml">메일</div>
+        <button class="menu-card" data-go="https://login.mailplug.com/auth/login?host_domain=seastargo.com&" data-ext="1">
+          <div class="mi"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 6 8 7 8-7"/></svg></div><div class="ml">메일</div>
           <div class="md">MailPlug</div>
         </button>
-        <button class="menu-card" data-go="https://sedms.seastar.co.kr/" data-ext="1">
-          <div class="mi">📂</div><div class="ml">SEDMS</div>
+        <button class="menu-card" data-go="https://sedms.app/" data-ext="1">
+          <div class="mi"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg></div><div class="ml">SEDMS</div>
           <div class="md">전자문서</div>
         </button>
         <button class="menu-card admin-only" data-go="/admin">
-          <div class="mi">🛡️</div><div class="ml">관리자</div>
+          <div class="mi"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v6c0 5 3.5 7.5 7 9 3.5-1.5 7-4 7-9V6z"/></svg></div><div class="ml">관리자</div>
           <div class="md">사용자관리</div>
         </button>
       </div>
@@ -142,51 +139,17 @@
     <section class="sec">
       <div class="sec-h">🔗 빠른 액션</div>
       <div class="action-bar">
-        <button class="btn-primary" id="btnGoHome">🌐 그룹웨어 메인</button>
-        <button class="btn-ghost" id="btnRefreshAll">🔄 알림 갱신</button>
+        <button class="btn-primary" id="btnMessenger"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4z"/></svg> 메신저 팝업</button>
+        <button class="btn-ghost" id="btnGoHome"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg> 그룹웨어 메인</button>
+        <button class="btn-ghost" id="btnRefreshAll"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg> 갱신</button>
       </div>
     </section>
   </div>
 
-  <!-- Tab 2: 연차 -->
-  <div class="tab-pane" data-tab="leave">
-    <section class="sec">
-      <div class="sec-h">🌴 연차 신청 / 관리</div>
-      <div class="action-bar">
-        <button class="btn-primary" id="btnLeaveOpen">📋 연차 페이지 열기</button>
-        <button class="btn-ghost" id="btnLeaveNew">✏️ 새 신청</button>
-      </div>
-      <div class="hint">사이드 패널에서 빠른 신청 — 자세한 관리는 [페이지 열기]</div>
-    </section>
-    <section class="sec">
-      <div class="sec-h">내 연차 현황</div>
-      <div id="myLeave" class="leave-summary">
-        <div class="empty">로딩 중...</div>
-      </div>
-    </section>
-  </div>
-
-  <!-- Tab 3: SEDMS -->
-  <div class="tab-pane" data-tab="sedms">
-    <section class="sec">
-      <div class="sec-h">📂 SEDMS — 전자결재/문서</div>
-      <div class="action-bar">
-        <button class="btn-primary" id="btnSedmsOpen">📂 SEDMS 열기</button>
-        <button class="btn-ghost" id="btnSedmsApprove">✍️ 대기 결재</button>
-      </div>
-      <div class="hint">SEDMS는 별도 인증이 필요할 수 있습니다 (SSO 자동 연동)</div>
-    </section>
-    <section class="sec">
-      <div class="sec-h">대기 결재 목록</div>
-      <div id="pendingApproval" class="approval-list">
-        <div class="empty">로딩 중...</div>
-      </div>
-    </section>
-  </div>
 
   <footer class="footer">
     <a href="#" id="openOptions">설정</a> ·
-    <a href="#" id="checkUpdate">🔄 업데이트 확인</a> ·
+    <a href="#" id="checkUpdate" title="클릭 한 번에 최신 버전 자동 적용 + 재시작"><svg class="ic-inline" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg> 지금 업데이트</a> ·
     <span class="ver" id="curVer">v1.0.0</span>
     <div id="updateStatus" class="update-status"></div>
   </footer>

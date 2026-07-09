@@ -1,0 +1,11 @@
+name = "sgw-seastar-work"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-01-01"
+
+[vars]
+AUTH_SUCCESS_URL = "/"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sgw-employees"
+database_id = "bae02072-8e1e-4ddc-957a-99132dd066c2"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ViewState, User, Schedule } from '../types';
 import { MockServer } from '../services/mockServer';
-import { Mail, Clock, Users, CheckCircle, Settings, MapPin, X, Lock, Calendar } from 'lucide-react';
+import { Mail, Clock, Users, CheckCircle, Settings, MapPin, X, Lock, Calendar, FolderOpen } from 'lucide-react';
 import { MobileHome } from './MobileHome';
 interface HomeProps {
     currentUser: User;
@@ -16,7 +16,9 @@ const OFFICE_LOCATION = {
     radius: 500 // meters
 };
 
-const EXTERNAL_LINK = 'http://dms.seastar.work';
+// SEDMS 진입은 sedms.app 직접이 아니라 SGW 서버(/api/sedms-sso)가 HMAC 서명 후
+// 재로그인 없이 SEDMS 세션을 발급받게 한다(SGW-SSO). 시크릿은 서버에만 있다.
+const SEDMS_SSO_ENDPOINT = '/api/sedms-sso';
 
 export const Home: React.FC<HomeProps> = ({ currentUser, onNavigate, unreadCount }) => {
     const [attendance, setAttendance] = useState<{ clockIn: number | null, clockOut: number | null }>({ clockIn: null, clockOut: null });
@@ -31,7 +33,22 @@ export const Home: React.FC<HomeProps> = ({ currentUser, onNavigate, unreadCount
     }, [currentUser.id]);
 
     const handleExternalLink = () => {
-        window.open(EXTERNAL_LINK, '_blank');
+        // 로그인 직원만 SEDMS SSO 진입. currentUser 신원을 서버로 넘기면 서버가
+        // 사내 도메인 검증 후 HMAC 서명해 sedms.app/sso/sgw 로 리다이렉트한다.
+        // ponytail: 현재 SGW 로그인이 mock 이라 서버가 신원을 독립 검증하지 못한다.
+        //   서버 세션 쿠키가 있으면 서버가 그 값을 우선 사용하고 아래 쿼리는 무시한다.
+        if (!currentUser?.email) {
+            alert('SGW 로그인이 필요합니다.');
+            return;
+        }
+        const params = new URLSearchParams({
+            email: currentUser.email,
+            name: currentUser.name || '',
+            emp_id: currentUser.id || '',
+            role: currentUser.role || '',
+            dept: currentUser.department || '',
+        });
+        window.open(`${SEDMS_SSO_ENDPOINT}?${params.toString()}`, '_blank');
     };
 
     const Card = ({
@@ -85,10 +102,10 @@ export const Home: React.FC<HomeProps> = ({ currentUser, onNavigate, unreadCount
     );
 
     const handleSystemSettings = () => {
-        if (currentUser.id === '5') { // Check specifically for Kim Bong-jeong
+        if (currentUser.role === 'admin') { // ★ role 기반 (id 하드코딩 제거 — 관리자 전권 정책과 일치)
             onNavigate('admin');
         } else {
-            alert("접근 권한이 없습니다.\n시스템 설정은 김봉정(최고 관리자)님만 접근 가능합니다.");
+            alert("접근 권한이 없습니다.\n시스템 설정은 관리자만 접근 가능합니다.");
         }
     };
 
@@ -189,6 +206,19 @@ export const Home: React.FC<HomeProps> = ({ currentUser, onNavigate, unreadCount
 
     return (
         <div className="animate-fade-in space-y-4 md:space-y-8 relative">
+            {/* 엔터프라이즈 인사 배너 (데스크톱) */}
+            <div className="hidden md:flex items-center justify-between bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500 rounded-2xl px-7 py-6 text-white shadow-lg shadow-blue-600/20">
+                <div>
+                    <h1 className="text-2xl font-extrabold tracking-tight">{currentUser.name}님, 환영합니다 👋</h1>
+                    <p className="opacity-90 text-sm mt-1">
+                        {currentUser.position}{currentUser.department ? ` · ${currentUser.department}` : ''}{currentUser.role === 'admin' ? ' · 관리자' : ''}
+                    </p>
+                </div>
+                <div className="text-right">
+                    <p className="text-xs opacity-80">{new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })}</p>
+                    <p className="text-base font-bold mt-1 tracking-wide">SEASTAR <span className="text-sky-200">GROUPWARE</span></p>
+                </div>
+            </div>
             <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
 
                 {/* Leave Management Card - MOVED TO TOP */}
@@ -231,6 +261,20 @@ export const Home: React.FC<HomeProps> = ({ currentUser, onNavigate, unreadCount
                 >
                     <div className="flex flex-col items-center justify-center h-24">
                         <p className="text-xs text-slate-500">임직원 검색</p>
+                    </div>
+                </Card>
+
+                {/* SEDMS (전자문서) — 외부 연동 */}
+                <Card
+                    title="SEDMS"
+                    icon={FolderOpen}
+                    colorClass="text-emerald-600"
+                    bgClass="bg-emerald-100"
+                    onClick={handleExternalLink}
+                    isExternal
+                >
+                    <div className="flex flex-col items-center justify-center h-24">
+                        <p className="text-xs text-slate-500">전자문서 시스템</p>
                     </div>
                 </Card>
 

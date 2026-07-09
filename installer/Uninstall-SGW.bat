@@ -1,6 +1,5 @@
 @echo off
-chcp 65001 >nul 2>&1
-title Seastar Groupware - ì œê±°
+title Seastar Groupware - Á¦°Å
 
 net session >nul 2>&1
 if %errorLevel% neq 0 (
@@ -8,12 +7,12 @@ if %errorLevel% neq 0 (
     exit /b
 )
 
-echo Seastar Groupware ì •ì±… ì œê±° ì¤‘...
+echo Seastar Groupware Á¤Ã¥ Á¦°Å Áß...
 for %%P in (
     "Google\Chrome" "NaverCorp\Whale" "NaverCorporation\Whale" "Microsoft\Edge"
     "BraveSoftware\Brave" "Opera Software\Opera" "Vivaldi\Vivaldi" "YandexBrowser" "Chromium"
 ) do (
     reg delete "HKLM\SOFTWARE\Policies\%%~P\ExtensionInstallForcelist" /v 1 /f >nul 2>&1
 )
-echo ì œê±° ì™„ë£Œ. ë¸Œë¼ìš°ì € ìž¬ì‹œìž‘ ì‹œ ìžë™ ì œê±°ë©ë‹ˆë‹¤.
+echo Á¦°Å ¿Ï·á. ºê¶ó¿ìÀú Àç½ÃÀÛ ½Ã ÀÚµ¿ Á¦°ÅµË´Ï´Ù.
 pause

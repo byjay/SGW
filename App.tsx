@@ -9,6 +9,7 @@ import { AdminUsers } from './components/AdminUsers';
 import { ApprovalSystem } from './components/ApprovalSystem';
 import { CalendarView } from './components/CalendarView';
 import { Home } from './components/Home';
+import { Chat } from './components/Chat';
 import { LoginPopup } from './components/LoginPopup';
 import { InitialPasswordModal } from './components/InitialPasswordModal';
 import { User, ViewState, Post } from './types';
@@ -17,12 +18,27 @@ import { Megaphone, X, MessageSquare, Calendar as CalendarIcon } from 'lucide-re
 
 function App() {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    // ★ 세션 복원 중 로그인 화면이 잠깐 번쩍이는 문제 방지 — current_user_id가 있으면
+    //   복원 완료 전까지 스플래시만 보여주고 Login 폼은 렌더하지 않는다.
+    const [isRestoring, setIsRestoring] = useState<boolean>(() => !!localStorage.getItem('current_user_id'));
     const [currentView, setCurrentView] = useState<ViewState>('home');
     const [unreadCount, setUnreadCount] = useState(0);
     const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
 
     // Initial Password Check
     const [initialPwdCheck, setInitialPwdCheck] = useState<{ required: boolean; count: number } | null>(null);
+
+    // ★ 확장앱 메뉴 클릭마다 그룹웨어를 새 탭으로 열던 시절, 탭마다 App이 새로
+    //   마운트되며 이 알림이 매번 다시 떴다(귀찮음 신고됨). 탭 재사용으로도 고쳤지만,
+    //   그래도 남을 수 있는 새로고침/새탭 경로를 대비해 "이 브라우저에서 한 번 봤으면
+    //   다시 안 띄움" 가드를 추가— 비밀번호를 실제로 바꾸기 전까진 원치 않아도 되는
+    //   반복 팝업만 막는다(변경 완료 시 isInitialPasswordRequired 자체가 false가 됨).
+    const shouldShowPwdNag = (userId: string) => {
+        const key = `swgs_pwd_nag_seen_${userId}`;
+        if (localStorage.getItem(key)) return false;
+        localStorage.setItem(key, '1');
+        return true;
+    };
 
     // Notice State
     const [newNotice, setNewNotice] = useState<Post | null>(null);
@@ -36,6 +52,10 @@ function App() {
     // Message Notification State
     const [newMessage, setNewMessage] = useState<any | null>(null);
     const [showMessageModal, setShowMessageModal] = useState(false);
+
+    // Chat Notification State
+    const [newChat, setNewChat] = useState<any | null>(null);
+    const [showChatModal, setShowChatModal] = useState(false);
 
     // Approval Notification State
     const [newApproval, setNewApproval] = useState<any | null>(null);
@@ -55,8 +75,8 @@ function App() {
         try {
             const options = {
                 body: body,
-                icon: '/sgws_logo_custom.png',
-                badge: '/sgws_logo_custom.png',
+                icon: '/icon-192.png',
+                badge: '/icon-192.png',
                 tag: 'sgw-notification',
                 renotify: true
             };
@@ -70,9 +90,55 @@ function App() {
         }
     }, []);
 
+    // ★ 확장앱(page-bridge.js)이 알림을 가로채려면 window 전역에 노출돼야 한다.
+    //   이게 없으면 공지/연차/쪽지/결재 강력 알림(OS 팝업)이 절대 발동하지 않는다 — 실사용 버그였음.
+    useEffect(() => {
+        (window as any).sendNativeNotification = sendNativeNotification;
+        return () => { delete (window as any).sendNativeNotification; };
+    }, [sendNativeNotification]);
+
+    // 확장앱 deep-link: URL 경로(/board) 또는 ?view=board → 초기 뷰
+    const getDeepLinkView = (): ViewState | null => {
+        try {
+            const valid: ViewState[] = ['home', 'board', 'messages', 'chat', 'leave', 'approval', 'admin', 'calendar', 'mail'];
+            const params = new URLSearchParams(window.location.search);
+            const q = (params.get('view') || '').toLowerCase();
+            const seg = (window.location.pathname.replace(/^\/+/, '').split('/')[0] || '').toLowerCase();
+            const want = (valid as string[]).includes(q) ? q : ((valid as string[]).includes(seg) ? seg : '');
+            return want ? (want as ViewState) : null;
+        } catch { return null; }
+    };
+
+    // ★ 구글 계정 연동 콜백 결과 처리 (?linked=1&g=... / ?linked=0&err=...)
+    //   콜백이 앱 루트로 리다이렉트하며 붙인 쿼리를 읽어 알림 후 URL 정리.
+    useEffect(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const linked = params.get('linked');
+            if (linked === '1') {
+                const g = params.get('g') || '';
+                alert(`구글 계정(${g})이 연동되었습니다.`);
+            } else if (linked === '0') {
+                const err = params.get('err') || 'unknown';
+                alert(`구글 계정 연동에 실패했습니다. (${err})`);
+            }
+            if (linked !== null) {
+                params.delete('linked');
+                params.delete('g');
+                params.delete('err');
+                const qs = params.toString();
+                window.history.replaceState({}, '', window.location.pathname + (qs ? '?' + qs : ''));
+            }
+        } catch { /* 쿼리 파싱 실패 무시 */ }
+    }, []);
+
     useEffect(() => {
         // Initialize mock data
         MockServer.init();
+
+        // 확장앱 메뉴 deep-link → 초기 뷰 반영
+        const dl = getDeepLinkView();
+        if (dl) setCurrentView(dl);
 
         // Try to restore session from simple storage (optional, for refresh)
         const storedUserId = localStorage.getItem('current_user_id');
@@ -82,11 +148,13 @@ function App() {
                     setCurrentUser(user);
                     // Also check for mandatory password change on refresh/restore
                     const check = await MockServer.isInitialPasswordRequired(user.id);
-                    if (check.required) {
+                    if (check.required && shouldShowPwdNag(user.id)) {
                         setInitialPwdCheck(check);
                     }
                 }
-            });
+            }).finally(() => setIsRestoring(false));
+        } else {
+            setIsRestoring(false);
         }
     }, []);
 
@@ -153,6 +221,31 @@ function App() {
                 }
             }
 
+            // 6-1. Check for new chat messages
+            if (!showChatModal) {
+                const rooms = await MockServer.getChatRooms(currentUser.id);
+                const lastSeenChatTime = parseInt(localStorage.getItem(`last_seen_chat_${currentUser.id}`) || '0');
+                let candidate: { roomId: string; senderId: string; content: string; timestamp: number } | null = null;
+                for (const room of rooms) {
+                    const msgs = await MockServer.getChatMessages(room.id);
+                    for (const m of msgs) {
+                        if (m.senderId !== currentUser.id && m.timestamp > lastSeenChatTime) {
+                            if (!candidate || m.timestamp > candidate.timestamp) {
+                                candidate = { roomId: room.id, senderId: m.senderId, content: m.content, timestamp: m.timestamp };
+                            }
+                        }
+                    }
+                }
+                if (candidate) {
+                    const allUsersForChat = await MockServer.getUsers();
+                    const sender = allUsersForChat.find(u => u.id === candidate!.senderId);
+                    const senderName = sender ? sender.name : '알 수 없음';
+                    setNewChat({ ...candidate, senderName });
+                    setShowChatModal(true);
+                    sendNativeNotification(`💬 ${senderName} 채팅`, candidate.content);
+                }
+            }
+
             // 7. Check for new approvals
             if (!showApprovalModal) {
                 const myApprovals = await MockServer.getApprovals(currentUser.id);
@@ -176,18 +269,61 @@ function App() {
         // Run interval
         const interval = setInterval(tick, 3000); // 3 second loop for responsiveness
         return () => clearInterval(interval);
-    }, [currentUser, showNoticeModal, showLeaveModal, showMessageModal, showApprovalModal]);
+    }, [currentUser, showNoticeModal, showLeaveModal, showMessageModal, showChatModal, showApprovalModal]);
 
     const handleLogin = async (user: User) => {
-        const check = await MockServer.isInitialPasswordRequired(user.id);
-        if (check.required) {
-            setInitialPwdCheck(check);
-        }
         setCurrentUser(user);
         localStorage.setItem('current_user_id', user.id);
         await MockServer.heartbeat(user.id); // Immediate heartbeat
         requestNotificationPermission(); // Request permission on login
-        setCurrentView('home');
+        setCurrentView(getDeepLinkView() || 'home'); // 확장앱 deep-link 존중
+
+        // ★ 로그인 직후: 미읽음 쪽지/채팅을 "가장 먼저" 팝업 노출 (마스터 요구)
+        //   쪽지 우선(z-[110]로 초기비번 모달보다 위), 없으면 채팅 팝업.
+        let popupShown = false;
+        try {
+            const myMessages = await MockServer.getMessages(user.id);
+            const unreadMessages = myMessages.filter(m => m.receiverId === user.id && !m.isRead);
+            if (unreadMessages.length > 0) {
+                const newestMsg = unreadMessages[0];
+                setNewMessage(newestMsg);
+                setShowMessageModal(true);
+                sendNativeNotification(`💬 ${newestMsg.senderName}님의 쪽지`, newestMsg.content);
+                popupShown = true;
+            }
+        } catch { /* 쪽지 조회 실패는 무시 */ }
+
+        if (!popupShown) {
+            try {
+                const rooms = await MockServer.getChatRooms(user.id);
+                let candidate: { roomId: string; senderId: string; content: string; timestamp: number } | null = null;
+                const lastSeenChatTime = parseInt(localStorage.getItem(`last_seen_chat_${user.id}`) || '0');
+                for (const room of rooms) {
+                    const msgs = await MockServer.getChatMessages(room.id);
+                    for (const m of msgs) {
+                        if (m.senderId !== user.id && m.timestamp > lastSeenChatTime) {
+                            if (!candidate || m.timestamp > candidate.timestamp) {
+                                candidate = { roomId: room.id, senderId: m.senderId, content: m.content, timestamp: m.timestamp };
+                            }
+                        }
+                    }
+                }
+                if (candidate) {
+                    const allUsersForChat = await MockServer.getUsers();
+                    const sender = allUsersForChat.find(u => u.id === candidate!.senderId);
+                    const senderName = sender ? sender.name : '알 수 없음';
+                    setNewChat({ ...candidate, senderName });
+                    setShowChatModal(true);
+                    sendNativeNotification(`💬 ${senderName} 채팅`, candidate.content);
+                }
+            } catch { /* 채팅 조회 실패는 무시 */ }
+        }
+
+        // 초기비번 모달은 쪽지/채팅 팝업 뒤에 배치 (쪽지 모달이 z-[110]로 위에 노출됨)
+        const check = await MockServer.isInitialPasswordRequired(user.id);
+        if (check.required && shouldShowPwdNag(user.id)) {
+            setInitialPwdCheck(check);
+        }
     };
 
     const handleLogout = async () => {
@@ -239,6 +375,18 @@ function App() {
         setCurrentView('messages');
     }, [handleCloseMessageNotification]);
 
+    const handleCloseChatNotification = useCallback(() => {
+        if (currentUser && newChat) {
+            localStorage.setItem(`last_seen_chat_${currentUser.id}`, newChat.timestamp.toString());
+        }
+        setShowChatModal(false);
+    }, [currentUser, newChat]);
+
+    const handleGoToChat = useCallback(() => {
+        handleCloseChatNotification();
+        setCurrentView('chat');
+    }, [handleCloseChatNotification]);
+
     const handleCloseApprovalNotification = useCallback(() => {
         if (currentUser && newApproval) {
             localStorage.setItem(`last_seen_approval_${currentUser.id}`, newApproval.createdAt.toString());
@@ -250,6 +398,16 @@ function App() {
         handleCloseApprovalNotification();
         setCurrentView('approval');
     }, [handleCloseApprovalNotification]);
+
+    // ★ 세션 복원 중 — 로그인 폼 대신 스플래시(다크/그린 브랜드)만 표시, 화면 번쩍임 방지
+    if (isRestoring) {
+        return (
+            <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0e0e0e' }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid #2b2b2b', borderTopColor: '#3ecf8e', animation: 'sgw-spin .8s linear infinite' }} />
+                <style>{`@keyframes sgw-spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+        );
+    }
 
     return (
 
@@ -272,6 +430,7 @@ function App() {
                         {currentView === 'home' && <Home currentUser={currentUser} onNavigate={setCurrentView} unreadCount={unreadCount} />}
                         {currentView === 'board' && <Board currentUser={currentUser} postIdToOpen={postToOpen} />}
                         {currentView === 'messages' && <Messaging currentUser={currentUser} />}
+                        {currentView === 'chat' && <Chat currentUser={currentUser} onlineUsers={onlineUsers} />}
                         {currentView === 'leave' && <LeaveManagement currentUser={currentUser} />}
                         {currentView === 'admin' && <AdminUsers currentUser={currentUser} />}
                         {currentView === 'approval' && <ApprovalSystem currentUser={currentUser} />}
@@ -366,7 +525,7 @@ function App() {
 
             {/* Message Notification Modal */}
             {showMessageModal && newMessage && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in">
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleCloseMessageNotification}></div>
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm relative z-10 overflow-hidden transform transition-all scale-100">
                         <div className="bg-emerald-500 p-6 text-white relative overflow-hidden">
@@ -398,6 +557,47 @@ function App() {
                                     className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition-all"
                                 >
                                     쪽지 확인하기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Chat Notification Modal */}
+            {showChatModal && newChat && (
+                <div className="fixed inset-0 z-[55] flex items-center justify-center p-4 animate-fade-in">
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleCloseChatNotification}></div>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm relative z-10 overflow-hidden transform transition-all scale-100">
+                        <div className="bg-indigo-600 p-6 text-white relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                                <MessageSquare size={120} />
+                            </div>
+                            <div className="relative z-10">
+                                <div className="inline-flex items-center space-x-2 bg-indigo-700/50 rounded-full px-3 py-1 mb-3 text-xs font-bold border border-indigo-400">
+                                    <MessageSquare size={12} />
+                                    <span>새 채팅 메시지</span>
+                                </div>
+                                <h3 className="text-xl font-bold mb-1">{newChat.senderName}님의 채팅</h3>
+                                <p className="text-indigo-100 text-sm">새로운 채팅 메시지가 도착했습니다.</p>
+                            </div>
+                        </div>
+                        <div className="p-6 bg-white">
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
+                                <p className="text-sm text-slate-600 mb-1 line-clamp-2">{newChat.content}</p>
+                            </div>
+                            <div className="flex space-x-3">
+                                <button
+                                    onClick={handleCloseChatNotification}
+                                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-colors"
+                                >
+                                    닫기
+                                </button>
+                                <button
+                                    onClick={handleGoToChat}
+                                    className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/20 transition-all"
+                                >
+                                    채팅 확인하기
                                 </button>
                             </div>
                         </div>

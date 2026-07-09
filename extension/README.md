@@ -80,6 +80,6 @@ ajlojcldaocimafbolojgokhpdfhkpkb
 ## 보안
 
 - 모든 데이터: `chrome.storage.local` (외부 전송 없음)
-- 통신: `sgw-seastar-work.pages.dev` 본체 그룹웨어만
+- 통신: `sgw.seastar.work` 본체 그룹웨어만
 - declarativeNetRequest: 사내 도메인 한정 헤더 정책
 - API 키, JWT, 사원번호: 로컬 저장 (영구 세션)

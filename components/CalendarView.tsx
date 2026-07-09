@@ -1,7 +1,7 @@
 import React from 'react';
-import { User, Schedule } from '../types';
+import { User, Schedule, LeaveRequest } from '../types';
 import { MockServer } from '../services/mockServer';
-import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, X, User as UserIcon, List } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, X, User as UserIcon, List, CalendarDays } from 'lucide-react';
 
 interface CalendarViewProps {
     currentUser: User;
@@ -11,6 +11,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser }) => {
     const [currentDate, setCurrentDate] = React.useState(new Date());
     const [selectedDate, setSelectedDate] = React.useState<Date>(new Date());
     const [schedules, setSchedules] = React.useState<Schedule[]>([]);
+    const [myLeaves, setMyLeaves] = React.useState<LeaveRequest[]>([]); // ★ 본인 연차 (연간 전체, 날짜선택 무관 항상 표시)
     const [loading, setLoading] = React.useState(true);
     const [showModal, setShowModal] = React.useState(false);
     const [viewMode, setViewMode] = React.useState<'calendar' | 'list'>('calendar');
@@ -29,8 +30,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser }) => {
         setLoading(false);
     };
 
+    const loadMyLeaves = async () => {
+        const all = await MockServer.getLeaveRequests();
+        const mine = all
+            .filter(l => l.userId === currentUser.id)
+            .sort((a, b) => b.startDate.localeCompare(a.startDate));
+        setMyLeaves(mine);
+    };
+
     React.useEffect(() => {
         loadSchedules();
+        loadMyLeaves();
     }, [currentUser.id]);
 
     // Calendar Logic
@@ -394,6 +404,70 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser }) => {
                     })()}
                 </div>
             )}
+
+            {/* ★ 내 연차 (연간 전체 리스트) — 선택 날짜와 무관하게 항상 하단에 표시 */}
+            {(() => {
+                const yearStr = String(year);
+                const yearLeaves = myLeaves.filter(l => l.startDate.startsWith(yearStr));
+                const typeLabel: Record<string, string> = {
+                    annual: '연차', morning_half: '오전반차', afternoon_half: '오후반차',
+                    sick: '병가', event: '경조사', family: '가족돌봄'
+                };
+                const statusBadge: Record<string, string> = {
+                    approved: 'bg-green-100 text-green-700', pending: 'bg-amber-100 text-amber-700',
+                    pending_approval: 'bg-amber-100 text-amber-700', rejected: 'bg-red-100 text-red-700',
+                    pending_delete: 'bg-orange-100 text-orange-700', draft: 'bg-slate-100 text-slate-600'
+                };
+                const statusText: Record<string, string> = {
+                    approved: '승인됨', pending: '대기중', pending_approval: '승인대기',
+                    rejected: '반려', pending_delete: '삭제대기', draft: '임시'
+                };
+                return (
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0" style={{ minHeight: '220px', maxHeight: '360px' }}>
+                        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                            <div className="flex items-center gap-3">
+                                <CalendarDays className="text-emerald-600" size={20} />
+                                <h3 className="font-bold text-slate-800">내 연차 — {year}년 전체 내역</h3>
+                                <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">{yearLeaves.length}건</span>
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                            {yearLeaves.length === 0 ? (
+                                <div className="px-4 py-8 text-center text-sm text-slate-400">
+                                    {year}년 연차 신청 내역이 없습니다.
+                                </div>
+                            ) : (
+                                <table className="w-full text-left border-collapse">
+                                    <thead className="bg-white sticky top-0 z-10 shadow-sm">
+                                        <tr className="text-xs text-slate-500 border-b border-slate-100">
+                                            <th className="p-3 font-medium w-24">상태</th>
+                                            <th className="p-3 font-medium w-24">종류</th>
+                                            <th className="p-3 font-medium">기간</th>
+                                            <th className="p-3 font-medium w-16 text-right">일수</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50 text-sm">
+                                        {yearLeaves.map(l => (
+                                            <tr key={l.id} className="hover:bg-slate-50">
+                                                <td className="p-3">
+                                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${statusBadge[l.status] || 'bg-slate-100 text-slate-600'}`}>
+                                                        {statusText[l.status] || l.status}
+                                                    </span>
+                                                </td>
+                                                <td className="p-3 font-bold text-slate-700">{typeLabel[l.type] || l.type}</td>
+                                                <td className="p-3 text-slate-600">
+                                                    {l.startDate === l.endDate ? l.startDate : `${l.startDate} ~ ${l.endDate}`}
+                                                </td>
+                                                <td className="p-3 text-right font-mono text-slate-700">{l.days}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Add Schedule Modal */}
             {showModal && (

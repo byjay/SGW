@@ -1,336 +1,140 @@
-import React, { useState, useEffect } from 'react';
-import { User } from '../types';
-import { MockServer } from '../services/mockServer';
-import { MapPin, Lock, CheckCircle, X } from 'lucide-react';
+import React from 'react';
+import { User, ViewState } from '../types';
+import { APP_CONFIG } from '../constants/appConfig';
+import { Home, LayoutGrid, MessageSquare, MessageCircle, Calendar, FileCheck, CalendarDays, Shield, Mail, FolderOpen, ExternalLink } from 'lucide-react';
 
 interface MobileHomeProps {
   currentUser: User;
-  onNavigate: (view: any) => void;
+  onNavigate: (view: ViewState) => void;
   unreadCount: number;
 }
 
-const OFFICE_LOCATION = {
-  lat: 37.5665,
-  lng: 126.9780,
-  radius: 500 // meters
-};
+// SEDMS 진입은 SGW 서버(/api/sedms-sso)가 HMAC 서명 후 재로그인 없이 세션 발급 (Home.tsx와 동일 로직)
+const SEDMS_SSO_ENDPOINT = '/api/sedms-sso';
 
+// ★ 모바일에서도 웹과 동일하게 전 기능 접근 (2026-07-09 마스터 지시: "모바일 2기능 제한 취소")
 export const MobileHome: React.FC<MobileHomeProps> = ({ currentUser, onNavigate, unreadCount }) => {
-  const [attendance, setAttendance] = useState<{ clockIn: number | null, clockOut: number | null }>({ clockIn: null, clockOut: null });
-  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
-  const [attendanceStep, setAttendanceStep] = useState<'location' | 'verify' | 'success'>('location');
-  const [verifyPassword, setVerifyPassword] = useState('');
-  const [locationStatus, setLocationStatus] = useState('위치 확인 중...');
-  const [isVerifying, setIsVerifying] = useState(false);
-
-  useEffect(() => {
-    MockServer.getTodayAttendance(currentUser.id).then(setAttendance);
-  }, [currentUser.id]);
-
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371e3; // metres
-    const φ1 = lat1 * Math.PI / 180;
-    const φ2 = lat2 * Math.PI / 180;
-    const Δφ = (lat2 - lat1) * Math.PI / 180;
-    const Δλ = (lon2 - lon1) * Math.PI / 180;
-
-    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) *
-      Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
-  };
-
-  const checkLocation = () => {
-    setLocationStatus('GPS 위치 확인 중...');
-    if (!navigator.geolocation) {
-      setLocationStatus('GPS를 지원하지 않는 브라우저입니다.');
+  const openSedms = () => {
+    if (!currentUser?.email) {
+      alert('SGW 로그인이 필요합니다.');
       return;
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const dist = calculateDistance(
-          position.coords.latitude,
-          position.coords.longitude,
-          OFFICE_LOCATION.lat,
-          OFFICE_LOCATION.lng
-        );
-
-        setTimeout(() => {
-          if (dist > OFFICE_LOCATION.radius) {
-            setLocationStatus(`위치 인증 실패 — 사무실에서 ${Math.round(dist)}m 떨어져 있습니다. (500m 이내 필요)`);
-          } else {
-            setLocationStatus('위치 인증 완료 (본사 반경 500m 내)');
-            setTimeout(() => setAttendanceStep('verify'), 800);
-          }
-        }, 1500);
-      },
-      (error) => {
-        console.error(error);
-        setLocationStatus('위치 정보를 가져올 수 없습니다. 권한을 확인해주세요.');
-      }
-    );
+    const params = new URLSearchParams({
+      email: currentUser.email,
+      name: currentUser.name || '',
+      emp_id: currentUser.id || '',
+      role: currentUser.role || '',
+      dept: currentUser.department || '',
+    });
+    window.open(`${SEDMS_SSO_ENDPOINT}?${params.toString()}`, '_blank');
   };
 
-  const handleIdentityVerify = async () => {
-    if (!verifyPassword.trim()) {
-      alert('비밀번호를 입력해주세요.');
-      return;
-    }
-    setIsVerifying(true);
+  // 내부 기능 카드 정의 (color 토큰: 라이트/다크 모두 대비 4.5:1↑ 확보)
+  const features: Array<{
+    view: ViewState;
+    label: string;
+    desc: string;
+    icon: any;
+    iconClass: string;
+    iconBg: string;
+    badge?: number;
+    adminOnly?: boolean;
+  }> = [
+    { view: 'home', label: '홈', desc: '대시보드', icon: Home, iconClass: 'text-blue-600 dark:text-blue-300', iconBg: 'bg-blue-50 dark:bg-blue-900/30' },
+    { view: 'board', label: '게시판', desc: '공지·자료', icon: LayoutGrid, iconClass: 'text-indigo-600 dark:text-indigo-300', iconBg: 'bg-indigo-50 dark:bg-indigo-900/30' },
+    { view: 'messages', label: '쪽지함', desc: '쪽지·조직도', icon: MessageSquare, iconClass: 'text-cyan-600 dark:text-cyan-300', iconBg: 'bg-cyan-50 dark:bg-cyan-900/30', badge: unreadCount },
+    { view: 'chat', label: '채팅', desc: '실시간 대화', icon: MessageCircle, iconClass: 'text-teal-600 dark:text-teal-300', iconBg: 'bg-teal-50 dark:bg-teal-900/30' },
+    { view: 'leave', label: '연차 신청', desc: '휴가/반차', icon: Calendar, iconClass: 'text-purple-600 dark:text-purple-300', iconBg: 'bg-purple-50 dark:bg-purple-900/30' },
+    { view: 'approval', label: '전자결재', desc: '결재 문서', icon: FileCheck, iconClass: 'text-amber-600 dark:text-amber-300', iconBg: 'bg-amber-50 dark:bg-amber-900/30' },
+    { view: 'calendar', label: '캘린더', desc: '일정 관리', icon: CalendarDays, iconClass: 'text-rose-600 dark:text-rose-300', iconBg: 'bg-rose-50 dark:bg-rose-900/30' },
+    { view: 'admin', label: '관리자', desc: '사용자 관리', icon: Shield, iconClass: 'text-slate-700 dark:text-slate-200', iconBg: 'bg-slate-100 dark:bg-slate-800', adminOnly: true },
+  ];
 
-    const verifiedUser = await MockServer.login(currentUser.id, verifyPassword);
-    if (!verifiedUser) {
-      alert('비밀번호가 일치하지 않습니다.');
-      setIsVerifying(false);
-      return;
-    }
-
-    setTimeout(async () => {
-      setIsVerifying(false);
-      if (!attendance.clockIn) {
-        await MockServer.logAttendance(currentUser.id, 'clock_in');
-      } else {
-        await MockServer.logAttendance(currentUser.id, 'clock_out');
-      }
-      MockServer.getTodayAttendance(currentUser.id).then(setAttendance);
-      setAttendanceStep('success');
-    }, 1000);
-  };
-
-  const openAttendanceModal = () => {
-    setShowAttendanceModal(true);
-    setAttendanceStep('location');
-    setVerifyPassword('');
-    checkLocation();
-  };
-
-  const isAdmin = currentUser.id === '5';
-
-  const handleNavigate = (view: any) => {
-    onNavigate(view);
-  };
+  const visibleFeatures = features.filter(f => !f.adminOnly || currentUser.role === 'admin');
 
   return (
-    <div className="bg-[#f6f6f8] dark:bg-[#101622] -mx-4 -mt-4 min-h-[calc(100vh-64px)] pb-10 flex flex-col">
+    <div className="bg-[#f6f6f8] dark:bg-[#101622] -mx-4 -mt-4 min-h-[calc(100vh-64px)] pb-24 flex flex-col">
       <div className="flex-1 w-full">
         {/* Welcome Section */}
         <section className="p-4">
           <div className="bg-gradient-to-br from-[#135bec] to-blue-700 rounded-xl p-6 text-white shadow-lg shadow-[#135bec]/20">
             <div className="flex flex-col gap-1">
-              <h2 className="text-2xl font-bold">Welcome back, {currentUser.name.split(' ')[0]}</h2>
-              <p className="opacity-90 text-sm">{currentUser.role === 'admin' ? 'Administrator' : 'Employee'} • {currentUser.projectScope}</p>
+              <h2 className="text-2xl font-bold">{currentUser.name}님, 환영합니다 👋</h2>
+              <p className="opacity-90 text-sm">{currentUser.position}{currentUser.department ? ` · ${currentUser.department}` : ''}{currentUser.role === 'admin' ? ' · 관리자' : ''}</p>
             </div>
             <div className="mt-4 flex items-center gap-2 text-xs font-medium bg-white/20 w-fit px-3 py-1 rounded-full backdrop-blur-md">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
               </svg>
-              Last login: Today
+              오늘 접속 중
             </div>
           </div>
         </section>
 
-        {/* Attendance Quick Status */}
-        <section className="px-4 py-2">
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold tracking-wider">출퇴근 관리</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-lg font-bold">
-                    {attendance.clockIn ? new Date(attendance.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '00:00'}
-                  </span>
-                </div>
-              </div>
-            </div>
+        {/* Main Features Grid — 전 기능 */}
+        <section className="px-4 pb-2">
+          <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-slate-100">주요 기능</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {visibleFeatures.map((f) => {
+              const Icon = f.icon;
+              return (
+                <button
+                  key={f.view}
+                  onClick={() => onNavigate(f.view)}
+                  className="text-left bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-3 hover:border-blue-500/40 active:scale-[0.98] transition-all cursor-pointer group relative"
+                >
+                  {f.badge && f.badge > 0 ? (
+                    <span className="absolute top-3 right-3 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">{f.badge}</span>
+                  ) : null}
+                  <div className={`w-11 h-11 ${f.iconBg} ${f.iconClass} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                    <Icon size={22} />
+                  </div>
+                  <div className="w-full">
+                    <p className="font-bold text-slate-900 dark:text-slate-100 text-sm break-keep line-clamp-1">{f.label}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 break-keep line-clamp-1 mt-0.5">{f.desc}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* External Services */}
+        <section className="p-4">
+          <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-slate-100">외부 연동</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {/* MailPlug 메일 */}
             <button
-              onClick={openAttendanceModal}
-              className="bg-[#135bec] hover:bg-[#135bec]/90 text-white px-5 py-2 rounded-lg font-semibold text-sm transition-all shadow-sm active:scale-95"
+              onClick={() => window.open(APP_CONFIG.MAIL.URL, '_blank')}
+              className="text-left bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-3 hover:border-blue-500/40 active:scale-[0.98] transition-all cursor-pointer relative"
             >
-              출근/퇴근
+              <ExternalLink size={13} className="absolute top-3 right-3 text-slate-400" />
+              <div className="w-11 h-11 bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-300 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Mail size={22} />
+              </div>
+              <div className="w-full">
+                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm break-keep line-clamp-1">메일</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 break-keep line-clamp-1 mt-0.5">MailPlug 웹메일</p>
+              </div>
+            </button>
+
+            {/* SEDMS 전자문서 */}
+            <button
+              onClick={openSedms}
+              className="text-left bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-3 hover:border-blue-500/40 active:scale-[0.98] transition-all cursor-pointer relative"
+            >
+              <ExternalLink size={13} className="absolute top-3 right-3 text-slate-400" />
+              <div className="w-11 h-11 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 rounded-xl flex items-center justify-center flex-shrink-0">
+                <FolderOpen size={22} />
+              </div>
+              <div className="w-full">
+                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm break-keep line-clamp-1">SEDMS</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 break-keep line-clamp-1 mt-0.5">전자문서 시스템</p>
+              </div>
             </button>
           </div>
         </section>
-
-        {/* Main Features Grid */}
-        <section className="p-4">
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-            Main Features
-            <span className="h-1 w-1 bg-slate-400 rounded-full"></span>
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            {/* Feature 1: Leave - MOVED TO TOP */}
-            <div
-              onClick={() => handleNavigate('leave')}
-              className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-3 sm:gap-4 hover:border-purple-500/30 transition-all cursor-pointer group"
-            >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-500 rounded-xl flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors flex-shrink-0">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div className="w-full">
-                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base break-keep line-clamp-2">연차 신청</p>
-                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 break-keep line-clamp-2 mt-0.5">휴가/반차 신청</p>
-              </div>
-            </div>
-
-
-
-            {/* Feature 3: Attendance */}
-            <div
-              onClick={openAttendanceModal}
-              className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-3 sm:gap-4 hover:border-orange-500/30 transition-all cursor-pointer group"
-            >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-50 dark:bg-orange-900/20 text-orange-500 rounded-xl flex items-center justify-center group-hover:bg-orange-500 group-hover:text-white transition-colors flex-shrink-0">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="w-full">
-                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base break-keep line-clamp-2">출퇴근 관리</p>
-                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 break-keep line-clamp-2 mt-0.5">
-                  {attendance.clockIn ? new Date(attendance.clockIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '00:00'}
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 4: Messages */}
-            <div
-              onClick={() => handleNavigate('messages')}
-              className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-3 sm:gap-4 hover:border-slate-600/30 transition-all cursor-pointer group"
-            >
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center group-hover:bg-slate-600 dark:group-hover:bg-slate-400 group-hover:text-white transition-colors flex-shrink-0">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <div className="w-full">
-                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base break-keep line-clamp-1">쪽지/조직도</p>
-                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 break-keep line-clamp-1 mt-0.5">임직원 검색</p>
-              </div>
-            </div>
-
-            {/* User Management for Supreme Admin */}
-            {isAdmin && (
-              <div
-                onClick={() => handleNavigate('admin')}
-                className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-start gap-4 hover:border-slate-600/30 transition-all cursor-pointer group col-span-2"
-              >
-                <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center group-hover:bg-slate-600 dark:group-hover:bg-slate-400 group-hover:text-white transition-colors">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900 dark:text-slate-100">사용자 관리</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">관리자</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Secondary Banner/Info */}
-        <section className="px-4 pb-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 flex shadow-sm">
-            <div className="flex-1 p-5">
-              <h4 className="font-bold text-slate-900 dark:text-slate-100">Company News</h4>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Welcome to SEASTAR Groupware. Stay connected!</p>
-              <button
-                onClick={() => handleNavigate('board')}
-                className="text-[#135bec] text-xs font-bold mt-3 inline-block"
-              >
-                READ MORE
-              </button>
-            </div>
-            <div className="w-24 bg-cover bg-center" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=200')` }}></div>
-          </div>
-        </section>
       </div>
-
-      {/* Attendance Modal */}
-      {showAttendanceModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAttendanceModal(false)}></div>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm relative z-10 animate-fade-in overflow-hidden">
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MapPin size={32} className="text-orange-600" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2">출퇴근 체크</h3>
-
-              {/* Step 1: Location Check */}
-              {attendanceStep === 'location' && (
-                <div className="py-4">
-                  <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                  <p className="text-slate-600 font-medium">{locationStatus}</p>
-                </div>
-              )}
-
-              {/* Step 2: Identity Verify */}
-              {attendanceStep === 'verify' && (
-                <div className="py-2 space-y-4 animate-fade-in">
-                  <div className="bg-green-50 text-green-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2">
-                    <CheckCircle size={16} />
-                    위치 인증 완료
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-500 mb-3">본인 확인을 위해 비밀번호를 입력해주세요.</p>
-                    <div className="relative">
-                      <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input
-                        type="password"
-                        value={verifyPassword}
-                        onChange={(e) => setVerifyPassword(e.target.value)}
-                        placeholder="비밀번호"
-                        className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
-                      />
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleIdentityVerify}
-                    disabled={isVerifying}
-                    className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-orange-600/20 disabled:opacity-70"
-                  >
-                    {isVerifying ? '확인 중...' : (attendance.clockIn && !attendance.clockOut ? '퇴근 처리하기' : '출근 처리하기')}
-                  </button>
-                </div>
-              )}
-
-              {/* Step 3: Success */}
-              {attendanceStep === 'success' && (
-                <div className="py-4 animate-fade-in">
-                  <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
-                  <h4 className="text-lg font-bold text-slate-800">처리가 완료되었습니다.</h4>
-                  <p className="text-slate-500 text-sm mt-2">
-                    {new Date().toLocaleString()}
-                  </p>
-                  <button
-                    onClick={() => setShowAttendanceModal(false)}
-                    className="mt-6 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
-                  >
-                    닫기
-                  </button>
-                </div>
-              )}
-            </div>
-            {attendanceStep !== 'success' && (
-              <button onClick={() => setShowAttendanceModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                <X size={20} />
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

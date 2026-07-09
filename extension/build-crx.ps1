@@ -1,4 +1,4 @@
-# Seastar GW - CRX Builder
+﻿# Seastar GW - CRX Builder
 $ErrorActionPreference = "Stop"
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BUILDDIR = Join-Path $ROOT "_build"

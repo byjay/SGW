@@ -13,6 +13,7 @@ export interface User {
   totalLeave?: number;
   carryover?: number;
   leaveBalance?: number;
+  isPartTime?: boolean;   // 아르바이트 — 연차 대신 출근/쉬는날만 구분
   password?: string;
   passwordChanged?: boolean;
   passwordChangeCount?: number;
@@ -46,6 +47,8 @@ export interface Message {
   content: string;
   timestamp: number;
   isRead: boolean;
+  fileName?: string;  // 첨부 파일명
+  fileData?: string;  // 첨부 dataURL (base64)
 }
 
 export interface ChatRoom {
@@ -65,7 +68,7 @@ export interface ChatMessage {
   readBy: string[];
 }
 
-export type LeaveType = 'annual' | 'morning_half' | 'afternoon_half' | 'sick' | 'event' | 'family';
+export type LeaveType = 'annual' | 'morning_half' | 'afternoon_half' | 'sick' | 'event' | 'family' | 'work' | 'dayoff';
 
 export interface LeaveRequest {
   id: string;

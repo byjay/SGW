@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Seastar Groupware - 사내 통합 도우미",
   "short_name": "Seastar GW",
-  "version": "1.0.5",
-  "description": "사원번호 로그인 · 연차/SEDMS 빠른 접근 · 영구 세션 · 활동 푸시 알림. SGW Seastar Work 연동 확장앱.",
+  "version": "1.0.24",
+  "description": "회사 이메일 1회 로그인(2중 로그인 없음) · 연차/SEDMS 빠른 접근 · 영구 세션 · 강력 알림. SGW Seastar Work 연동 확장앱.",
   "minimum_chrome_version": "116",
   "update_url": "https://swgs-internal.pages.dev/updates.xml",
 
@@ -26,6 +26,8 @@
     "default_path": "sidepanel/sidepanel.html"
   },
 
+  "options_page": "options/options.html",
+
   "background": {
     "service_worker": "background/service-worker.js",
     "type": "module"
@@ -38,31 +40,52 @@
     "sidePanel",
     "notifications",
     "alarms",
-    "downloads"
+    "downloads",
+    "contextMenus"
   ],
 
+  "commands": {
+    "open-sedms": {
+      "suggested_key": { "default": "Ctrl+Shift+S" },
+      "description": "SEDMS(전자문서) 열기"
+    },
+    "open-groupware": {
+      "suggested_key": { "default": "Ctrl+Shift+G" },
+      "description": "그룹웨어 메인 열기"
+    }
+  },
+
   "host_permissions": [
-    "https://sgw-seastar-work.pages.dev/*",
+    "https://sgw.seastar.work/*",
+    "https://*.seastar.work/*",
     "https://swgs-internal.pages.dev/*",
+    "https://sgw-admin.pages.dev/*",
     "https://*.seastar.co.kr/*",
+    "https://sedms.app/*",
     "https://m193.mailplug.com/*"
   ],
 
   "content_scripts": [
     {
       "matches": [
-        "https://sgw-seastar-work.pages.dev/*",
-        "https://*.seastar.co.kr/*"
+        "https://sgw.seastar.work/*",
+        "https://*.seastar.work/*",
+        "https://*.seastar.co.kr/*",
+        "https://sedms.app/*"
       ],
       "js": ["lib/messaging.js", "content/auth-bridge.js"],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "all_frames": true
     }
   ],
 
   "web_accessible_resources": [
     {
       "resources": ["content/page-bridge.js"],
-      "matches": ["https://sgw-seastar-work.pages.dev/*"]
+      "matches": [
+        "https://sgw.seastar.work/*",
+        "https://*.seastar.work/*"
+      ]
     }
   ]
 }

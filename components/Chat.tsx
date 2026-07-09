@@ -14,9 +14,21 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, onlineUsers }) => {
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = React.useState('');
   const [activeTab, setActiveTab] = React.useState<'friends' | 'chats'>('friends');
-  
+  const [otherUser, setOtherUser] = React.useState<User | undefined>(undefined);
+
   // Ref for auto-scrolling
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  // 활성 채팅방 상대 사용자 로드 (Hook은 조건부로 호출하면 안 되므로 최상위에서 관리)
+  React.useEffect(() => {
+    if (!activeRoom) { setOtherUser(undefined); return; }
+    const loadUser = async () => {
+      const users = await MockServer.getUsers();
+      const otherId = activeRoom.participants.find(id => id !== currentUser.id);
+      setOtherUser(users.find(u => u.id === otherId));
+    };
+    loadUser();
+  }, [activeRoom, currentUser.id]);
 
   const loadRooms = async () => {
     const fetchedRooms = await MockServer.getChatRooms(currentUser.id);
@@ -77,17 +89,6 @@ export const Chat: React.FC<ChatProps> = ({ currentUser, onlineUsers }) => {
   // CHAT ROOM VIEW (Black/Blue Dark Theme)
   // --------------------------------------------------------------------------------
   if (activeRoom) {
-    const [otherUser, setOtherUser] = React.useState<User | undefined>(undefined);
-    
-    React.useEffect(() => {
-        const loadUser = async () => {
-             const users = await MockServer.getUsers();
-             const otherId = activeRoom.participants.find(id => id !== currentUser.id);
-             setOtherUser(users.find(u => u.id === otherId));
-        };
-        loadUser();
-    }, [activeRoom]);
-
     return (
       <div className="fixed inset-0 z-50 flex flex-col bg-[#1a1a1a]"> {/* Full screen overlay for chat room */}
         {/* Header */}

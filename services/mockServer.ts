@@ -20,22 +20,25 @@ const generate3DAvatar = (name: string, color1: string, color2: string) => {
 };
 
 // Initial Mock Data
+// 직원 명부 (마스터 제공 2026-06-26) — 초기 비밀번호 전원 '1', 최초 로그인 시 강제 변경(passwordChanged:false)
 const INITIAL_USERS: User[] = [
-  { id: '1', name: '고영관', email: 'kohyk@seasargo.com', role: 'manager', status: 'active', position: 'CEO', department: '임원', joinDate: '2010-01-01', phone: '010-2830-4610', totalLeave: 15, carryover: 0, leaveBalance: 15, password: '1', avatar: generate3DAvatar('고영관', '#4facfe', '#00f2fe') },
-  { id: '2', name: '이선우', email: 'lsw00@seasargo.com', role: 'manager', status: 'active', position: '부장', department: '배관', joinDate: '2017-07-01', phone: '010-6805-1307', totalLeave: 18, carryover: 0, leaveBalance: 16.5, password: '1', avatar: generate3DAvatar('이선우', '#f093fb', '#f5576c') },
-  { id: '3', name: '김미진', email: 'kimmj@seasargo.com', role: 'manager', status: 'active', position: '차장', department: '배관', joinDate: '2023-10-16', phone: '010-7328-1223', totalLeave: 17, carryover: -1, leaveBalance: 15.5, password: '1', avatar: generate3DAvatar('김미진', '#84fab0', '#8fd3f4') },
-  { id: '4', name: '김민경', email: 'min55@seasargo.com', role: 'manager', status: 'active', position: '대리', department: '배관', joinDate: '2018-12-11', phone: '010-8540-0073', totalLeave: 22, carryover: 4, leaveBalance: 16, password: '1', avatar: generate3DAvatar('김민경', '#fa709a', '#fee140') },
-  { id: '5', name: '김봉정', email: 'designsir@seasargo.com', role: 'admin', status: 'active', position: '부장', department: '전장', joinDate: '2019-04-01', phone: '010-4544-0953', totalLeave: 18.5, carryover: 0.5, leaveBalance: 18.5, password: '0953', avatar: generate3DAvatar('김봉정', '#a18cd1', '#fbc2eb') },
-  { id: '6', name: '김선우', email: 'swlee@seasargo.com', role: 'manager', status: 'active', position: '차장', department: '철의장', joinDate: '2018-10-15', phone: '010-8631-4430', totalLeave: 17, carryover: -1, leaveBalance: 15, password: '1', avatar: generate3DAvatar('김선우', '#ff0844', '#ffb199') },
-  { id: '7', name: '이재명', email: 'leejm@seasargo.com', role: 'manager', status: 'active', position: '전무', department: '임원', joinDate: '2020-01-01', phone: '010-1234-5678', totalLeave: 20, carryover: 0, leaveBalance: 20, password: '1', avatar: generate3DAvatar('이재명', '#f6d365', '#fda085') },
-  { id: '8', name: '김정인', email: 'kimji@seasargo.com', role: 'user', status: 'active', position: '사원', department: '전장', joinDate: '2024-01-15', phone: '010-1111-2222', totalLeave: 15, carryover: 0, leaveBalance: 15, password: '1', avatar: generate3DAvatar('김정인', '#667eea', '#764ba2') },
-  { id: '9', name: '장현영', email: 'janghh@seasargo.com', role: 'user', status: 'active', position: '주임', department: '서무', joinDate: '2026-03-03', phone: '010-0000-0000', totalLeave: 0, carryover: 0, leaveBalance: 0, password: '1', avatar: generate3DAvatar('장현영', '#fdfbfb', '#ebedee') },
+  { id: '1',  name: '고영관', email: 'kohyk@seastargo.com',      role: 'manager', status: 'active', position: 'CEO',  department: '임원', joinDate: '2010-01-01', phone: '', totalLeave: 0, carryover: 0, leaveBalance: 0, password: '1', passwordChanged: false, avatar: generate3DAvatar('고영관', '#4facfe', '#00f2fe') },
+  { id: '2',  name: '고재이', email: 'jkohkr@seastargo.com',     role: 'user',    status: 'active', position: '이사', department: '임원', joinDate: '',           phone: '', totalLeave: 0, carryover: 0, leaveBalance: 0, password: '1', passwordChanged: false, avatar: generate3DAvatar('고재이', '#f093fb', '#f5576c') },
+  { id: '3',  name: '김미진', email: 'kimmj@seastargo.com',      role: 'user',    status: 'active', position: '부장', department: '배관', joinDate: '2023-10-16', phone: '', totalLeave: 19, carryover: 0, leaveBalance: 19, password: '1', passwordChanged: false, avatar: generate3DAvatar('김미진', '#84fab0', '#8fd3f4') },
+  { id: '4',  name: '김민경', email: 'min55@seastargo.com',      role: 'user',    status: 'active', position: '과장', department: '배관', joinDate: '2018-12-11', phone: '', totalLeave: 19, carryover: 0, leaveBalance: 19, password: '1', passwordChanged: false, avatar: generate3DAvatar('김민경', '#fa709a', '#fee140') },
+  { id: '5',  name: '김봉정', email: 'designsir@seastargo.com',  role: 'admin',   status: 'active', position: '부장', department: '전장', joinDate: '2019-04-01', phone: '', totalLeave: 19, carryover: 0, leaveBalance: 19, password: '1', passwordChanged: false, avatar: generate3DAvatar('김봉정', '#a18cd1', '#fbc2eb') },
+  { id: '6',  name: '김정인', email: 'bsbinin@seastargo.com',    role: 'user',    status: 'active', position: '부장', department: '전장', joinDate: '2024-01-15', phone: '', totalLeave: 19, carryover: 0, leaveBalance: 19, password: '1', passwordChanged: false, avatar: generate3DAvatar('김정인', '#667eea', '#764ba2') },
+  { id: '7',  name: '박규진', email: 'elcon0955@seastargo.com',  role: 'user',    status: 'active', position: '전무', department: '임원', joinDate: '',           phone: '', totalLeave: 19, carryover: 0, leaveBalance: 19, password: '1', passwordChanged: false, avatar: generate3DAvatar('박규진', '#30cfd0', '#330867') },
+  { id: '8',  name: '윤승현', email: 'seayun@seastargo.com',     role: 'user',    status: 'active', position: '아르바이트', department: '',     joinDate: '',           phone: '', totalLeave: 0, carryover: 0, leaveBalance: 0, isPartTime: true, password: '1', passwordChanged: false, avatar: generate3DAvatar('윤승현', '#a8edea', '#fed6e3') },
+  { id: '9',  name: '이선우', email: 'lsw00@seastargo.com',      role: 'manager', status: 'active', position: '부장', department: '배관', joinDate: '2017-07-01', phone: '', totalLeave: 19, carryover: 0, leaveBalance: 19, password: '1', passwordChanged: false, avatar: generate3DAvatar('이선우', '#f5576c', '#f093fb') },
+  { id: '10', name: '이재명', email: 'jmlee@seastargo.com',      role: 'user',    status: 'active', position: '전무', department: '임원', joinDate: '2020-01-01', phone: '', totalLeave: 19, carryover: 0, leaveBalance: 19, password: '1', passwordChanged: false, avatar: generate3DAvatar('이재명', '#f6d365', '#fda085') },
+  { id: '11', name: '장현영', email: 'hyjang9593@seastargo.com', role: 'user',    status: 'active', position: '주임', department: '서무', joinDate: '2026-03-03', phone: '', totalLeave: 19, carryover: 0, leaveBalance: 19, password: '1', passwordChanged: false, avatar: generate3DAvatar('장현영', '#fbc2eb', '#a18cd1') },
 ];
 
 const INITIAL_POSTS: Post[] = [
   {
     id: 'post1',
-    authorId: '2',
+    authorId: '5',
     authorName: '김봉정',
     title: '[공지] 커뮤니티 이용 수칙 안내',
     content: '모두가 즐거운 커뮤니티를 위해 서로 존중하며 대화합시다. 비방이나 욕설은 금지됩니다.',
@@ -80,20 +83,20 @@ const HOLIDAY_DATA = [
   // ... (All other holidays as previously defined)
 ];
 
+// ★ 이전 연차 신청내역 복원 — 새 명부 id로 매핑 (이선우 옛id2→새id9, 김미진 id3, 김민경 id4 유지)
+// (김선우는 현재 명부에 없어 제외)
 const INITIAL_LEAVE_REQUESTS: LeaveRequest[] = [
-  { id: 'leave_1', userId: '2', userName: '이선우', type: 'annual', startDate: '2026-01-02', endDate: '2026-01-02', days: 1, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-01-02T00:00:00').getTime() },
-  { id: 'leave_2', userId: '2', userName: '이선우', type: 'morning_half', startDate: '2026-02-03', endDate: '2026-02-03', days: 0.5, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-02-03T00:00:00').getTime() },
-  { id: 'leave_3', userId: '3', userName: '김미진', type: 'morning_half', startDate: '2026-02-05', endDate: '2026-02-05', days: 0.5, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-02-05T00:00:00').getTime() },
-  { id: 'leave_4', userId: '3', userName: '김미진', type: 'afternoon_half', startDate: '2026-02-25', endDate: '2026-02-25', days: 0.5, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-02-25T00:00:00').getTime() },
-  { id: 'leave_5', userId: '4', userName: '김민경', type: 'annual', startDate: '2026-01-09', endDate: '2026-01-09', days: 1, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-01-09T00:00:00').getTime() },
-  { id: 'leave_6', userId: '4', userName: '김민경', type: 'annual', startDate: '2026-01-16', endDate: '2026-01-16', days: 1, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-01-16T00:00:00').getTime() },
-  { id: 'leave_7', userId: '4', userName: '김민경', type: 'annual', startDate: '2026-01-23', endDate: '2026-01-23', days: 1, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-01-23T00:00:00').getTime() },
-  { id: 'leave_9', userId: '6', userName: '김선우', type: 'annual', startDate: '2026-01-02', endDate: '2026-01-02', days: 1, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-01-02T00:00:00').getTime() },
-  { id: 'leave_10', userId: '6', userName: '김선우', type: 'annual', startDate: '2026-01-30', endDate: '2026-01-30', days: 1, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-01-30T00:00:00').getTime() },
-  { id: 'leave_11', userId: '4', userName: '김민경', type: 'annual', startDate: '2026-02-27', endDate: '2026-02-27', days: 1, reason: '', emergencyContact: '', status: 'approved', requestDate: Date.now() },
-  { id: 'leave_12', userId: '4', userName: '김민경', type: 'afternoon_half', startDate: '2026-03-06', endDate: '2026-03-06', days: 0.5, reason: '', emergencyContact: '', status: 'approved', requestDate: Date.now() },
-  { id: 'leave_13', userId: '4', userName: '김민경', type: 'annual', startDate: '2026-03-25', endDate: '2026-03-25', days: 1, reason: '', emergencyContact: '', status: 'approved', requestDate: Date.now() },
-  { id: 'leave_14', userId: '3', userName: '김미진', type: 'afternoon_half', startDate: '2026-02-27', endDate: '2026-02-27', days: 0.5, reason: '', emergencyContact: '', status: 'approved', requestDate: Date.now() },
+  { id: 'leave_1',  userId: '9', userName: '이선우', type: 'annual',         startDate: '2026-01-02', endDate: '2026-01-02', days: 1,   reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-01-02T00:00:00').getTime() },
+  { id: 'leave_2',  userId: '9', userName: '이선우', type: 'morning_half',   startDate: '2026-02-03', endDate: '2026-02-03', days: 0.5, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-02-03T00:00:00').getTime() },
+  { id: 'leave_3',  userId: '3', userName: '김미진', type: 'morning_half',   startDate: '2026-02-05', endDate: '2026-02-05', days: 0.5, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-02-05T00:00:00').getTime() },
+  { id: 'leave_4',  userId: '3', userName: '김미진', type: 'afternoon_half', startDate: '2026-02-25', endDate: '2026-02-25', days: 0.5, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-02-25T00:00:00').getTime() },
+  { id: 'leave_14', userId: '3', userName: '김미진', type: 'afternoon_half', startDate: '2026-02-27', endDate: '2026-02-27', days: 0.5, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-02-27T00:00:00').getTime() },
+  { id: 'leave_5',  userId: '4', userName: '김민경', type: 'annual',         startDate: '2026-01-09', endDate: '2026-01-09', days: 1,   reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-01-09T00:00:00').getTime() },
+  { id: 'leave_6',  userId: '4', userName: '김민경', type: 'annual',         startDate: '2026-01-16', endDate: '2026-01-16', days: 1,   reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-01-16T00:00:00').getTime() },
+  { id: 'leave_7',  userId: '4', userName: '김민경', type: 'annual',         startDate: '2026-01-23', endDate: '2026-01-23', days: 1,   reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-01-23T00:00:00').getTime() },
+  { id: 'leave_11', userId: '4', userName: '김민경', type: 'annual',         startDate: '2026-02-27', endDate: '2026-02-27', days: 1,   reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-02-27T00:00:00').getTime() },
+  { id: 'leave_12', userId: '4', userName: '김민경', type: 'afternoon_half', startDate: '2026-03-06', endDate: '2026-03-06', days: 0.5, reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-03-06T00:00:00').getTime() },
+  { id: 'leave_13', userId: '4', userName: '김민경', type: 'annual',         startDate: '2026-03-25', endDate: '2026-03-25', days: 1,   reason: '', emergencyContact: '', status: 'approved', requestDate: new Date('2026-03-25T00:00:00').getTime() },
 ];
 
 const STORAGE_KEYS = {
@@ -116,6 +119,18 @@ const STORAGE_KEYS = {
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
+// ★ Presence (동시접속) — 서버(D1) 우선 + localStorage 폴백. 네트워크 throttle용 모듈 스코프 상태.
+let _lastHeartbeatPost = 0;
+let _lastOnlineFetch = 0;
+let _onlineCache: string[] = [];
+let _serverAvailable = false; // 서버(D1) presence 사용 가능 여부 (첫 성공 후 true)
+
+// ★ 쪽지/채팅 서버(D1) 우선 + localStorage 폴백. 첫 fetch 실패 시 폴백으로 남고,
+//   이후 재시도는 계속하되(다른 기기 접속 대비) 개발환경 404에서도 조용히 폴백.
+const mirrorLocal = (key: string, list: any[]) => {
+  try { localStorage.setItem(key, JSON.stringify(list)); } catch { /* ignore */ }
+};
+
 const isSameDay = (d1: number, d2: number) => {
   const date1 = new Date(d1);
   const date2 = new Date(d2);
@@ -128,46 +143,137 @@ export const MockServer = {
   // Initialize data if empty
   init: () => {
     // Initialize data only if not exists
-    const MIGRATION_KEY = 'app_migration_v6'; // Final hard sync to reflect all name/dept/pos changes
+    // 2026-06-26 명부 전면 교체(11명, @seastargo.com, 초기비번 '1' 강제변경) → 하드 리시드
+    const MIGRATION_KEY = 'app_migration_v7_roster';
     const storedUsersJson = localStorage.getItem(STORAGE_KEYS.USERS);
     const users: User[] = storedUsersJson ? JSON.parse(storedUsersJson) : [];
     const currentMigration = localStorage.getItem(MIGRATION_KEY);
 
-    if (users.length === 0) {
+    if (users.length === 0 || !currentMigration) {
+      // 신규 브라우저 또는 명부 마이그레이션 → INITIAL_USERS로 하드 리셋 (정확히 11명 보장)
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USERS));
       localStorage.setItem(MIGRATION_KEY, 'done');
-    } else if (!currentMigration) {
-      // Force update existing users and ensure they match INITIAL_USERS for key fields
-      // This is necessary because user reported lists was not updating
-      const updatedUsers = [...users];
-      INITIAL_USERS.forEach(initialUser => {
-        const existingIndex = updatedUsers.findIndex(u => u.id === initialUser.id);
-        if (existingIndex > -1) {
-          // Merge updates from INITIAL_USERS (name, position, department, joinDate, email)
-          // Preserve their password/leave status if they already changed it, 
-          // but for id '9' specifically, ensure all is fresh.
-          updatedUsers[existingIndex] = {
-            ...updatedUsers[existingIndex],
-            name: initialUser.name,
-            email: initialUser.email,
-            position: initialUser.position,
-            department: initialUser.department,
-            joinDate: initialUser.joinDate,
-            avatar: initialUser.avatar
-          };
-        } else {
-          updatedUsers.push(initialUser);
-        }
-      });
-      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updatedUsers));
-      localStorage.setItem(MIGRATION_KEY, 'done');
+      // 옛 명단 기반 샘플 연차/결재 잔존물 제거 (userId 불일치 방지)
+      localStorage.removeItem(STORAGE_KEYS.LEAVE_REQUESTS);
+      localStorage.removeItem(STORAGE_KEYS.APPROVALS);
     }
     if (!localStorage.getItem(STORAGE_KEYS.LEAVE_REQUESTS)) {
       localStorage.setItem(STORAGE_KEYS.LEAVE_REQUESTS, JSON.stringify(INITIAL_LEAVE_REQUESTS));
     }
+    // ★ 이전 연차 신청내역 복원 시드 (유저/비번 영향 없이 1회 강제 반영)
+    const LEAVE_SEED_KEY = 'app_leave_seed_v3';
+    if (localStorage.getItem(LEAVE_SEED_KEY) !== 'done') {
+      localStorage.setItem(STORAGE_KEYS.LEAVE_REQUESTS, JSON.stringify(INITIAL_LEAVE_REQUESTS));
+      localStorage.setItem(LEAVE_SEED_KEY, 'done');
+    }
+    // ★ 직급/부서/역할 동기화 (비번·사진 보존, 1회). 매니저 권한을 이선우·고영관으로 한정 반영.
+    const PROFILE_SYNC_KEY = 'app_profile_sync_v3';
+    if (localStorage.getItem(PROFILE_SYNC_KEY) !== 'done') {
+      const existing: User[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+      const merged = existing.map(u => {
+        const init = INITIAL_USERS.find(x => x.id === u.id);
+        if (!init) return u;
+        return { ...u, name: init.name, email: init.email, position: init.position, department: init.department, role: init.role };
+      });
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(merged));
+      localStorage.setItem(PROFILE_SYNC_KEY, 'done');
+    }
+    // ★ 연차 일괄 재조정 (2026-07-03 마스터 지시): 고영관·고재이는 0, 나머지는 19일로 통일. 1회만 실행.
+    const LEAVE_RESET_KEY = 'app_leave_reset_v1';
+    if (localStorage.getItem(LEAVE_RESET_KEY) !== 'done') {
+      const existing: User[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+      const merged = existing.map(u => {
+        const init = INITIAL_USERS.find(x => x.id === u.id);
+        if (!init) return u;
+        return { ...u, totalLeave: init.totalLeave, leaveBalance: init.leaveBalance, carryover: init.carryover };
+      });
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(merged));
+      localStorage.setItem(LEAVE_RESET_KEY, 'done');
+    }
+
+    // ★ 아르바이트(part-time) 동기화 (2026-07-06): 윤승현 등 isPartTime + 직급/연차 반영. 기존 브라우저 1회 마이그레이션.
+    const PARTTIME_SYNC_KEY = 'app_parttime_sync_v1';
+    if (localStorage.getItem(PARTTIME_SYNC_KEY) !== 'done') {
+      const existing: User[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+      const merged = existing.map(u => {
+        const init = INITIAL_USERS.find(x => x.id === u.id);
+        if (!init) return u;
+        return init.isPartTime
+          ? { ...u, isPartTime: true, position: init.position, totalLeave: 0, leaveBalance: 0, carryover: 0 }
+          : { ...u, isPartTime: false };
+      });
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(merged));
+      localStorage.setItem(PARTTIME_SYNC_KEY, 'done');
+    }
 
     if (!localStorage.getItem(STORAGE_KEYS.POSTS)) {
       localStorage.setItem(STORAGE_KEYS.POSTS, JSON.stringify(INITIAL_POSTS));
+    }
+    // ★ 확장 프로그램(Seastar GW) 설치 안내 공지 — 전 직원 1회 자동 게시 (기존 글 보존, 최상단 추가)
+    const EXT_NOTICE_ID = 'post_ext_install_v1';
+    const postsNow: Post[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.POSTS) || '[]');
+    if (!postsNow.some(p => p.id === EXT_NOTICE_ID)) {
+      postsNow.unshift({
+        id: EXT_NOTICE_ID,
+        authorId: '5',
+        authorName: '김봉정',
+        title: '[공지] 사내 확장 프로그램(Seastar GW) 설치 안내',
+        content:
+          '전 직원 대상 — Seastar Groupware 크롬 확장앱이 배포되었습니다. 사이드패널에서 연차·쪽지·공지·전자결재를 바로 확인하고, 강력 알림(팝업)까지 받을 수 있습니다.\n\n' +
+          '■ 자동 설치 (권장, IT/본인 모두 가능)\n' +
+          '1. https://swgs-internal.pages.dev 접속\n' +
+          '2. "IT 관리자용 자동 설치(.bat)" 다운로드\n' +
+          '3. 파일 우클릭 → 관리자 권한으로 실행\n' +
+          '4. 브라우저(Chrome/Whale/Edge) 완전히 껐다 켜면 자동 설치 완료\n\n' +
+          '■ 수동 설치 (개발자 모드)\n' +
+          '1. 위 사이트에서 ZIP 다운로드 후 압축 해제\n' +
+          '2. chrome://extensions 접속 → 우측 상단 "개발자 모드" 켜기\n' +
+          '3. "압축해제된 확장 프로그램을 로드합니다" → 해제한 폴더 선택\n\n' +
+          '■ 첫 사용\n' +
+          '- 툴바의 SEASTAR 아이콘 클릭 → 사이드패널 열림\n' +
+          '- 회사 이메일 + 초기 비밀번호 "1"로 로그인 (그룹웨어 창이 열립니다)\n' +
+          '- 로그인 후 사이드패널이 자동으로 연결되며, 이후 컴퓨터를 켤 때마다 로그인 상태가 자동 유지됩니다\n' +
+          '- "🏠 앱" 탭에서 그룹웨어 전체 기능을 확장 안에서 그대로 사용 가능, "🗖 전체화면"으로 언제든 새 탭 이동 가능\n\n' +
+          '문의: designsir@seastargo.com',
+        timestamp: Date.now(),
+        likes: 0,
+        type: 'notice',
+        comments: [],
+      });
+      localStorage.setItem(STORAGE_KEYS.POSTS, JSON.stringify(postsNow));
+    }
+    // ★ 확장앱 v1.0.16 업데이트 + 모바일 사용 안내 공지 — 전 직원 1회 자동 게시 (기존 글 보존, 최상단 추가)
+    const EXT_UPDATE_NOTICE_ID = 'post_ext_update_v116';
+    const postsNow2: Post[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.POSTS) || '[]');
+    if (!postsNow2.some(p => p.id === EXT_UPDATE_NOTICE_ID)) {
+      postsNow2.unshift({
+        id: EXT_UPDATE_NOTICE_ID,
+        authorId: '5',
+        authorName: '김봉정',
+        title: '[공지] Seastar GW 확장앱 v1.0.16 업데이트 & 모바일 사용 안내',
+        content:
+          '전 직원 대상 — Seastar GW 확장 프로그램이 v1.0.16으로 업데이트되었습니다. 아래 내용 확인 부탁드립니다.\n\n' +
+          '■ 1. 버전 업데이트 (v1.0.16)\n' +
+          '자동 설치(.bat)로 설치하신 분은 순차적으로 자동 업데이트됩니다. 아직 업데이트가 안 된 경우 아래 방법으로 수동 확인해 주세요.\n' +
+          '1. 크롬 주소창에 chrome://extensions 입력 후 이동\n' +
+          '2. 우측 상단 "개발자 모드" 켜기\n' +
+          '3. 좌측 상단 "업데이트" 버튼 클릭 (또는 브라우저 완전히 껐다 재시작)\n' +
+          '4. 버전이 1.0.16 이상으로 표시되면 완료\n\n' +
+          '■ 2. "즉시 업데이트" 버튼 정상화\n' +
+          '사이드패널의 "⚡ 지금 업데이트" 버튼이 이제 실제로 새 버전을 다운로드해 반영합니다. 이전에는 눌러도 반영되지 않던 문제가 있었는데, 이번 버전부터 정상 동작합니다.\n\n' +
+          '■ 3. 휴대폰에서도 사용 가능\n' +
+          '- 안드로이드(크롬) / 아이폰(사파리)에서 https://sgw.seastar.work 접속\n' +
+          '- 안드로이드: 우측 상단 ⋮ 메뉴 → "홈 화면에 추가"\n' +
+          '- 아이폰: 공유 버튼 → "홈 화면에 추가"\n' +
+          '- 추가 후 홈 화면 아이콘으로 앱처럼 바로 접속할 수 있습니다\n\n' +
+          '■ 문의\n' +
+          '설치/업데이트 관련 문의는 designsir@seastargo.com 으로 연락 주세요.',
+        timestamp: Date.now(),
+        likes: 0,
+        type: 'notice',
+        comments: [],
+      });
+      localStorage.setItem(STORAGE_KEYS.POSTS, JSON.stringify(postsNow2));
     }
     if (!localStorage.getItem(STORAGE_KEYS.MESSAGES)) {
       localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify([]));
@@ -296,9 +402,11 @@ export const MockServer = {
   bulkResetPasswords: async (newPassword: string): Promise<void> => {
     await delay(300);
     let users: User[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
-    users = users.map(u => ({ ...u, password: btoa(newPassword) }));
+    // ★ 비번을 초기값으로 재설정할 때는 passwordChanged/count도 함께 리셋해야
+    //   본인 재로그인 시 "초기 비밀번호 강제 변경" 화면이 다시 뜬다. (안 그러면 세팅이 무의미)
+    users = users.map(u => ({ ...u, password: btoa(newPassword), passwordChanged: false, passwordChangeCount: 0 }));
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-    await MockServer.logActivity('admin', '시스템 관리자', '비밀번호 일괄 초기화', '모든 사용자의 비밀번호가 초기화됨');
+    await MockServer.logActivity('admin', '시스템 관리자', '비밀번호 일괄 초기화', '모든 사용자의 비밀번호가 초기화됨 (재로그인 시 변경 필요)');
   },
 
   login: async (userId: string, inputPassword?: string): Promise<User | undefined> => {
@@ -315,6 +423,19 @@ export const MockServer = {
 
     await MockServer.logLoginHistory(user.id, 'login');
     await MockServer.logActivity(user.id, user.name, '로그인', '아이디/비밀번호 로그인 성공');
+    return { ...user, password: '' };
+  },
+
+  // ★ Google 계정(회사메일) 로그인 전용 — 신뢰된 외부 인증(Google ID 토큰 검증) 성공 후에만 호출할 것.
+  // 비밀번호 검사를 생략하므로 login()과 별개 함수로 분리 — login()의 검증 로직은 절대 건드리지 않는다.
+  loginTrusted: async (userId: string): Promise<User | undefined> => {
+    await delay(500);
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    const user = users.find((u: User) => u.id === userId);
+    if (!user) return undefined;
+
+    await MockServer.logLoginHistory(user.id, 'login');
+    await MockServer.logActivity(user.id, user.name, '로그인', 'Google 계정 로그인 성공');
     return { ...user, password: '' };
   },
 
@@ -371,19 +492,59 @@ export const MockServer = {
   },
 
   heartbeat: async (userId: string): Promise<void> => {
+    // 로컬 폴백 유지 (개발환경/서버 다운 시)
     const onlineStatus = JSON.parse(localStorage.getItem(STORAGE_KEYS.ONLINE) || '{}');
     onlineStatus[userId] = Date.now();
     localStorage.setItem(STORAGE_KEYS.ONLINE, JSON.stringify(onlineStatus));
+
+    // 서버(D1) 하트비트 — 최대 15초에 한 번만 POST (throttle)
+    const now = Date.now();
+    if (now - _lastHeartbeatPost >= 15000) {
+      _lastHeartbeatPost = now;
+      try {
+        await fetch('/api/presence', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
+        });
+      } catch {
+        // 네트워크 실패는 조용히 무시 (로컬 폴백으로 동작)
+      }
+    }
   },
 
   getOnlineUsers: async (): Promise<string[]> => {
-    const onlineStatus = JSON.parse(localStorage.getItem(STORAGE_KEYS.ONLINE) || '{}');
     const now = Date.now();
-    const threshold = 10 * 1000;
 
-    return Object.keys(onlineStatus).filter(userId => {
-      return (now - onlineStatus[userId]) < threshold;
-    });
+    // 서버(D1) 우선 — 최대 6초에 한 번만 GET (throttle)
+    if (now - _lastOnlineFetch >= 6000) {
+      _lastOnlineFetch = now;
+      try {
+        const res = await fetch('/api/presence');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.online)) {
+            _onlineCache = data.online.map((id: any) => String(id));
+            _serverAvailable = true;
+            return _onlineCache;
+          }
+        }
+        throw new Error('presence fetch failed');
+      } catch {
+        // 서버 없음(개발환경 404)/네트워크 실패 → localStorage 폴백
+        _onlineCache = [];
+        _serverAvailable = false;
+        const onlineStatus = JSON.parse(localStorage.getItem(STORAGE_KEYS.ONLINE) || '{}');
+        const threshold = 10 * 1000;
+        return Object.keys(onlineStatus).filter(userId => (now - onlineStatus[userId]) < threshold);
+      }
+    }
+
+    // throttle 중 — 서버 사용 가능하면 캐시, 아니면 localStorage 폴백
+    if (_serverAvailable) return _onlineCache;
+    const onlineStatus = JSON.parse(localStorage.getItem(STORAGE_KEYS.ONLINE) || '{}');
+    const threshold = 10 * 1000;
+    return Object.keys(onlineStatus).filter(userId => (now - onlineStatus[userId]) < threshold);
   },
 
   getAttendance: async (userId: string): Promise<any[]> => {
@@ -411,6 +572,12 @@ export const MockServer = {
     const onlineStatus = JSON.parse(localStorage.getItem(STORAGE_KEYS.ONLINE) || '{}');
     delete onlineStatus[userId];
     localStorage.setItem(STORAGE_KEYS.ONLINE, JSON.stringify(onlineStatus));
+    // 서버(D1) presence 즉시 제거 — best-effort
+    try {
+      await fetch('/api/presence?logout=' + encodeURIComponent(userId));
+    } catch {
+      // 실패 무시
+    }
     await MockServer.logLoginHistory(userId, 'logout');
     if (user) {
       await MockServer.logActivity(userId, user.name, '로그아웃', '시스템 접속 종료');
@@ -482,15 +649,30 @@ export const MockServer = {
   },
 
   getMessages: async (userId: string): Promise<Message[]> => {
-    await delay(300);
-    const allMessages: Message[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.MESSAGES) || '[]');
-    return allMessages
-      .filter((m) => m.receiverId === userId || m.senderId === userId)
-      .sort((a, b) => b.timestamp - a.timestamp);
+    // 서버(D1) 우선 — 성공하면 서버 데이터 반환 + localStorage 미러링
+    try {
+      const res = await fetch('/api/messages?userId=' + encodeURIComponent(userId));
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.messages)) {
+          const server: Message[] = data.messages;
+          mirrorLocal(STORAGE_KEYS.MESSAGES, server);
+          return server
+            .filter((m) => m.receiverId === userId || m.senderId === userId)
+            .sort((a, b) => b.timestamp - a.timestamp);
+        }
+      }
+      throw new Error('messages fetch failed');
+    } catch {
+      // 폴백: localStorage
+      const allMessages: Message[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.MESSAGES) || '[]');
+      return allMessages
+        .filter((m) => m.receiverId === userId || m.senderId === userId)
+        .sort((a, b) => b.timestamp - a.timestamp);
+    }
   },
 
-  sendMessage: async (sender: User, receiverId: string, content: string): Promise<Message> => {
-    await delay(500);
+  sendMessage: async (sender: User, receiverId: string, content: string, file?: { name: string; data: string }): Promise<Message> => {
     const allMessages: Message[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.MESSAGES) || '[]');
     const users: User[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
     const receiver = users.find(u => u.id === receiverId);
@@ -506,15 +688,37 @@ export const MockServer = {
       content,
       timestamp: Date.now(),
       isRead: false,
+      ...(file ? { fileName: file.name, fileData: file.data } : {}),
     };
+
+    // 서버(D1) 우선 — 성공/실패 무관하게 localStorage에도 기록(폴백/미러)
+    let serverOk = false;
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMessage),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.ok) serverOk = true;
+      }
+    } catch {
+      serverOk = false;
+    }
 
     allMessages.push(newMessage);
     localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(allMessages));
     await MockServer.logActivity(sender.id, sender.name, '쪽지 발송', `${receiver.name}님에게 쪽지 발송: ${content.substring(0, 20)}${content.length > 20 ? '...' : ''}`);
+    void serverOk;
     return newMessage;
   },
 
   markAsRead: async (messageId: string): Promise<void> => {
+    // 서버(D1) — best-effort
+    try {
+      await fetch('/api/messages?action=readone&id=' + encodeURIComponent(messageId), { method: 'POST' });
+    } catch { /* ignore */ }
     const allMessages: Message[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.MESSAGES) || '[]');
     const updatedMessages = allMessages.map(m =>
       m.id === messageId ? { ...m, isRead: true } : m
@@ -523,9 +727,28 @@ export const MockServer = {
   },
 
   deleteMessage: async (messageId: string): Promise<void> => {
+    // 서버(D1) — best-effort
+    try {
+      await fetch('/api/messages?action=delete&id=' + encodeURIComponent(messageId), { method: 'POST' });
+    } catch { /* ignore */ }
     const allMessages: Message[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.MESSAGES) || '[]');
     const updatedMessages = allMessages.filter(m => m.id !== messageId);
     localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(updatedMessages));
+  },
+
+  // 대화 일괄 읽음 (상대→나 메시지 전부 읽음 처리) — 메신저용
+  markConversationRead: async (userId: string, otherId: string): Promise<void> => {
+    // 서버(D1) — best-effort
+    try {
+      await fetch('/api/messages?action=read&userId=' + encodeURIComponent(userId) + '&otherId=' + encodeURIComponent(otherId), { method: 'POST' });
+    } catch { /* ignore */ }
+    const all: Message[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.MESSAGES) || '[]');
+    let changed = false;
+    const upd = all.map(m => {
+      if (m.receiverId === userId && m.senderId === otherId && !m.isRead) { changed = true; return { ...m, isRead: true }; }
+      return m;
+    });
+    if (changed) localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(upd));
   },
 
   // Leave Management Methods
@@ -888,21 +1111,56 @@ export const MockServer = {
 
   // Chat Methods
   getChatRooms: async (userId: string): Promise<ChatRoom[]> => {
-    await delay(300);
-    const rooms: ChatRoom[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHAT_ROOMS) || '[]');
-    return rooms.filter(r => r.participants.includes(userId)).sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+    // 서버(D1) 우선 — 성공하면 서버 방목록 반환 + localStorage 미러링
+    try {
+      const res = await fetch('/api/chat?userId=' + encodeURIComponent(userId));
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.rooms)) {
+          const server: ChatRoom[] = data.rooms;
+          // 미러: 기존 로컬 방 + 서버 방 병합(서버 우선) 저장
+          const local: ChatRoom[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHAT_ROOMS) || '[]');
+          const byId: Record<string, ChatRoom> = {};
+          for (const r of local) byId[r.id] = r;
+          for (const r of server) byId[r.id] = r;
+          mirrorLocal(STORAGE_KEYS.CHAT_ROOMS, Object.values(byId));
+          return server.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+        }
+      }
+      throw new Error('chat rooms fetch failed');
+    } catch {
+      const rooms: ChatRoom[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHAT_ROOMS) || '[]');
+      return rooms.filter(r => r.participants.includes(userId)).sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+    }
   },
 
   startChat: async (myId: string, otherId: string): Promise<ChatRoom> => {
-    await delay(300);
     const rooms: ChatRoom[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHAT_ROOMS) || '[]');
 
-    // Check if room exists
+    // Check if room exists (서버 방목록도 확인해 크로스브라우저 중복 방 방지)
     let room = rooms.find(r =>
       r.participants.includes(myId) &&
       r.participants.includes(otherId) &&
       r.participants.length === 2
     );
+
+    if (!room) {
+      // 서버에 이미 같은 방이 있는지 조회
+      try {
+        const res = await fetch('/api/chat?userId=' + encodeURIComponent(myId));
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.rooms)) {
+            const found = (data.rooms as ChatRoom[]).find(r =>
+              r.participants.includes(myId) &&
+              r.participants.includes(otherId) &&
+              r.participants.length === 2
+            );
+            if (found) room = found;
+          }
+        }
+      } catch { /* ignore — 로컬 신규 생성으로 진행 */ }
+    }
 
     if (!room) {
       room = {
@@ -911,20 +1169,52 @@ export const MockServer = {
         lastMessage: '',
         lastMessageTime: Date.now(),
       };
-      rooms.push(room);
-      localStorage.setItem(STORAGE_KEYS.CHAT_ROOMS, JSON.stringify(rooms));
     }
+
+    // localStorage에 upsert
+    const existsIdx = rooms.findIndex(r => r.id === room!.id);
+    if (existsIdx === -1) rooms.push(room);
+    else rooms[existsIdx] = room;
+    localStorage.setItem(STORAGE_KEYS.CHAT_ROOMS, JSON.stringify(rooms));
+
+    // 서버(D1)에도 방 upsert — best-effort
+    try {
+      await fetch('/api/chat?action=room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(room),
+      });
+    } catch { /* ignore */ }
+
     return room;
   },
 
   getChatMessages: async (roomId: string): Promise<ChatMessage[]> => {
-    // await delay(100); 
-    const messages: ChatMessage[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHAT_MESSAGES) || '[]');
-    return messages.filter(m => m.roomId === roomId).sort((a, b) => a.timestamp - b.timestamp);
+    // 서버(D1) 우선 — 성공하면 서버 메시지 반환 + localStorage 미러링
+    try {
+      const res = await fetch('/api/chat?roomId=' + encodeURIComponent(roomId));
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.messages)) {
+          const server: ChatMessage[] = data.messages;
+          // 미러: 다른 방 메시지는 유지, 이 방 메시지는 서버로 교체
+          const local: ChatMessage[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHAT_MESSAGES) || '[]');
+          const others = local.filter(m => m.roomId !== roomId);
+          mirrorLocal(STORAGE_KEYS.CHAT_MESSAGES, [...others, ...server]);
+          return server.sort((a, b) => a.timestamp - b.timestamp);
+        }
+      }
+      throw new Error('chat messages fetch failed');
+    } catch {
+      const messages: ChatMessage[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHAT_MESSAGES) || '[]');
+      return messages.filter(m => m.roomId === roomId).sort((a, b) => a.timestamp - b.timestamp);
+    }
   },
 
   sendChatMessage: async (roomId: string, senderId: string, content: string): Promise<ChatMessage> => {
-    // await delay(100);
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    const user = users.find((u: any) => u.id === senderId);
+
     const messages: ChatMessage[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHAT_MESSAGES) || '[]');
     const newMessage: ChatMessage = {
       id: `msg_${Date.now()}`,
@@ -934,6 +1224,16 @@ export const MockServer = {
       timestamp: Date.now(),
       readBy: [senderId]
     };
+
+    // 서버(D1) 우선 — best-effort. senderName 포함해 전송.
+    try {
+      await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newMessage, senderName: user?.name || senderId }),
+      });
+    } catch { /* ignore */ }
+
     messages.push(newMessage);
     localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify(messages));
 
@@ -952,8 +1252,6 @@ export const MockServer = {
     });
     localStorage.setItem(STORAGE_KEYS.CHAT_ROOMS, JSON.stringify(updatedRooms));
 
-    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
-    const user = users.find((u: any) => u.id === senderId);
     await MockServer.logActivity(senderId, user?.name || senderId, '채팅 메시지', `채팅방(${roomId})에 메시지 전송: ${content.substring(0, 20)}${content.length > 20 ? '...' : ''}`);
 
     return newMessage;

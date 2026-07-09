@@ -6,19 +6,63 @@
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Seastar Groupware</title>
-  <!-- Deployment Sync: 2026-03-10 22:40 - Mobile Verification Fix -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
   <link rel="manifest" href="/manifest.json">
+  <!-- ★ iOS는 manifest 아이콘을 무시 — 홈 화면 추가(모바일 앱 설치)를 위해 명시적 태그 필수 -->
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SGW">
+  <meta name="theme-color" content="#0e7a4d">
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').then(reg => {
           console.log('SW registered:', reg);
+          if (reg && reg.update) setInterval(() => reg.update(), 60000); // SW 최신화
         }).catch(err => {
           console.log('SW registration failed:', err);
         });
       });
+      // 새 SW가 제어권을 잡으면(=새 배포 활성화) 자동 새로고침
+      let _swReloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (_swReloaded) return; _swReloaded = true; location.reload();
+      });
     }
+  </script>
+  <script>
+    /* ★ 자동 업데이트: 배포된 새 번들(index-XXXX.js 해시 변경) 감지 시 자동 새로고침.
+       열려있는 탭도 Ctrl+F5 없이 최신으로 갱신된다. */
+    (function () {
+      function currentHash() {
+        var s = document.querySelector('script[src*="/assets/index-"]');
+        var m = s && s.src.match(/index-[\w-]+\.js/);
+        return m ? m[0] : null;
+      }
+      var loaded = null;
+      window.addEventListener('load', function () { loaded = currentHash(); });
+      var busy = false;
+      async function checkUpdate() {
+        if (busy || !loaded) return; busy = true;
+        try {
+          var r = await fetch('/?__v=' + Date.now(), { cache: 'no-store' });
+          var t = await r.text();
+          var m = t.match(/assets\/(index-[\w-]+\.js)/);
+          if (m && m[1] !== loaded) {
+            console.log('[SGW] 새 버전 배포 감지 → 자동 업데이트:', loaded, '→', m[1]);
+            location.reload();
+          }
+        } catch (e) { /* 오프라인 등 무시 */ }
+        finally { busy = false; }
+      }
+      setInterval(checkUpdate, 90000);            // 90초마다 확인
+      window.addEventListener('focus', checkUpdate);            // 탭 복귀 시 즉시
+      document.addEventListener('visibilitychange', function () { if (!document.hidden) checkUpdate(); });
+    })();
   </script>
   <style>
     :root {
@@ -29,7 +73,7 @@
     }
 
     body {
-      font-family: 'Noto Sans KR', sans-serif;
+      font-family: 'Pretendard', 'Pretendard Variable', 'Noto Sans KR', -apple-system, system-ui, sans-serif;
       /* Disable text selection like a native app */
       -webkit-user-select: none;
       -moz-user-select: none;

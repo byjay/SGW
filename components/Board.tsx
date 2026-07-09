@@ -88,6 +88,14 @@ export const Board: React.FC<BoardProps> = ({ currentUser, postIdToOpen }) => {
   const notices = posts.filter(p => p.type === 'notice');
   const normalPosts = posts.filter(p => p.type !== 'notice');
 
+  // 실제 데이터 기반 페이지네이션 (가짜 1·2·3 제거)
+  const PAGE_SIZE = 15;
+  const [page, setPage] = React.useState(1);
+  const totalPages = Math.max(1, Math.ceil(normalPosts.length / PAGE_SIZE));
+  // 데이터가 줄어 현재 페이지가 범위를 벗어나면 보정
+  React.useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
+  const pagePosts = normalPosts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   // --------------------------------------------------------------------------------
   // DETAIL VIEW
   // --------------------------------------------------------------------------------
@@ -308,13 +316,13 @@ export const Board: React.FC<BoardProps> = ({ currentUser, postIdToOpen }) => {
                      <div className="p-12 text-center text-slate-400">게시글이 없습니다.</div>
                 ) : (
                     <div className="divide-y divide-slate-100">
-                        {normalPosts.map((post, idx) => (
-                             <div 
-                                key={post.id} 
+                        {pagePosts.map((post, idx) => (
+                             <div
+                                key={post.id}
                                 onClick={() => setSelectedPost(post)}
                                 className="grid grid-cols-12 py-3 text-sm text-slate-700 text-center items-center hover:bg-slate-50 cursor-pointer"
                              >
-                                <div className="col-span-1 text-slate-400">{normalPosts.length - idx}</div>
+                                <div className="col-span-1 text-slate-400">{normalPosts.length - ((page - 1) * PAGE_SIZE + idx)}</div>
                                 <div className="col-span-7 md:col-span-6 text-left px-4 truncate hover:underline decoration-slate-400 underline-offset-2">
                                     {post.title}
                                     {post.comments.length > 0 && <span className="text-blue-500 text-xs ml-1 font-medium">[{post.comments.length}]</span>}
@@ -331,14 +339,28 @@ export const Board: React.FC<BoardProps> = ({ currentUser, postIdToOpen }) => {
           )}
       </div>
       
-      {/* Fake Pagination */}
-      <div className="flex justify-center space-x-2 mt-6">
-          <button className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50">&lt;</button>
-          <button className="w-8 h-8 flex items-center justify-center rounded bg-blue-600 text-white font-bold">1</button>
-          <button className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-50">2</button>
-          <button className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-50">3</button>
-          <button className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50">&gt;</button>
-      </div>
+      {/* 실제 페이지네이션 — 2페이지 이상일 때만 노출 */}
+      {totalPages > 1 && (
+        <div className="flex justify-center space-x-2 mt-6">
+            <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >&lt;</button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                <button
+                    key={n}
+                    onClick={() => setPage(n)}
+                    className={`w-8 h-8 flex items-center justify-center rounded font-bold ${n === page ? 'bg-blue-600 text-white' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                >{n}</button>
+            ))}
+            <button
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="w-8 h-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >&gt;</button>
+        </div>
+      )}
 
     </div>
   );

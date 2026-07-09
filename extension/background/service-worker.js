@@ -12,16 +12,41 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(()=>{}
 
 const UPDATE_URL = 'https://swgs-internal.pages.dev/version.json';
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.alarms.create('swgs_activity_poll', { periodInMinutes: 1, when: Date.now() + 5000 });
+// 폴링 주기 = 옵션값(기본 1분) — alarm 최소 주기는 Chrome 정책상 1분
+async function setupAlarms() {
+  let p = parseInt(await storage.get(KEYS.POLL_INTERVAL_MIN), 10);
+  if (!Number.isFinite(p) || p < 1) p = DEFAULTS.poll_interval_min;
+  if (p > 30) p = 30;
+  chrome.alarms.create('swgs_activity_poll', { periodInMinutes: p, when: Date.now() + 5000 });
   // ★ 30분마다 새 버전 확인 (Chrome 기본 5~10시간 → 30분으로 단축)
   chrome.alarms.create('swgs_update_check', { periodInMinutes: 30, when: Date.now() + 15000 });
-});
+}
+
+chrome.runtime.onInstalled.addListener(() => { setupAlarms(); setupContextMenus(); });
 chrome.runtime.onStartup.addListener(() => {
-  chrome.alarms.create('swgs_activity_poll', { periodInMinutes: 1, when: Date.now() + 5000 });
-  chrome.alarms.create('swgs_update_check', { periodInMinutes: 30, when: Date.now() + 15000 });
+  setupAlarms();
+  setupContextMenus();
   // 시작 시 즉시 한 번 체크
   setTimeout(() => checkUpdate(true), 3000);
+});
+
+/* ════════ 빠른 접근 — 단축키 + 우클릭 메뉴 ════════ */
+async function openSedms()     { chrome.tabs.create({ url: (await storage.get(KEYS.SEDMS_HOST)) || DEFAULTS.sedms_host }); }
+async function openGroupware() { chrome.tabs.create({ url: (await storage.get(KEYS.GW_HOST))    || DEFAULTS.gw_host }); }
+
+function setupContextMenus() {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({ id: 'swgs-open-sedms',     title: '📂 SEDMS 새 창으로 열기',     contexts: ['action'] });
+    chrome.contextMenus.create({ id: 'swgs-open-groupware', title: '🌐 그룹웨어 새 창으로 열기',   contexts: ['action'] });
+  });
+}
+chrome.contextMenus.onClicked.addListener((info) => {
+  if (info.menuItemId === 'swgs-open-sedms')     openSedms();
+  else if (info.menuItemId === 'swgs-open-groupware') openGroupware();
+});
+chrome.commands.onCommand.addListener((cmd) => {
+  if (cmd === 'open-sedms')     openSedms();
+  else if (cmd === 'open-groupware') openGroupware();
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -30,7 +55,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 /* ════════ 활동 폴링 — SGW 페이지 keep-alive 방식 ════════
- * SGW (sgw-seastar-work.pages.dev)는 React MockServer 기반이라 별도 API endpoint가 없음.
+ * SGW (sgw.seastar.work)는 React MockServer 기반이라 별도 API endpoint가 없음.
  * 따라서 SGW 탭이 열려있으면 그 탭의 content script가 직접 알림을 보냄 (3초 루프).
  * 탭이 없으면 — 사이드 패널이 폴링 시 백그라운드 탭으로 SGW를 잠깐 열어 활동을 받아옴.
  */
@@ -58,20 +83,24 @@ async function pollActivity() {
   // } catch (e) {}
 }
 
-chrome.notifications.onClicked.addListener((nid) => {
+chrome.notifications.onClicked.addListener(async (nid) => {
   if (!nid.startsWith('swgs-')) return;
-  // 알림 클릭 → 해당 페이지 열기
+  // 알림 클릭 → 해당 페이지 열기 + 알림 닫기
   const kind = nid.split('-')[1];
-  const host = DEFAULTS.gw_host;
+  const host = (await storage.get(KEYS.GW_HOST)) || DEFAULTS.gw_host;
   const path = ({ notice: '/board', leave: '/leave', message: '/messages', approval: '/approval' })[kind] || '/';
-  chrome.tabs.create({ url: host + path });
+  if (kind === 'message') {
+    // 쪽지는 메신저 팝업 창으로
+    chrome.windows.create({ url: host + '/messages', type: 'popup', width: 460, height: 760, focused: true }).catch(() => chrome.tabs.create({ url: host + path }));
+  } else {
+    chrome.tabs.create({ url: host + path });
+  }
+  chrome.notifications.clear(nid);
 });
 
-/* ════════ 원클릭 자동 업데이트 (사용자 클릭 1회 → 끝) ════════
- * 1. version.json 폴링
- * 2. 새 버전이면 chrome.runtime.requestUpdateCheck() 강제 → CRX 자동 다운로드
- * 3. 다운로드 완료되면 chrome.runtime.reload() → 확장 자동 재시작
- * 4. 사용자는 클릭 1회만, 다른 행동 없음
+/* ════════ 업데이트 확인 (알림만 — 자동 reload/download 없음) ════════
+ * 새 버전 감지 시 사이드패널 배너 + OS 알림만 표시.
+ * 실제 적용은 사용자가 명시적으로 SWGS_FORCE_RELOAD 메시지를 보내야 실행됨.
  */
 async function autoUpdateNow() {
   try {
@@ -82,29 +111,26 @@ async function autoUpdateNow() {
     if (compareVer(j.version, myVer) <= 0) {
       return { ok: true, upToDate: true, version: myVer };
     }
-    // 새 버전 있음 — Chrome에 강제 업데이트 체크 + 자동 reload
-    return await new Promise((resolve) => {
-      if (!chrome.runtime.requestUpdateCheck) {
-        // 정책 미설치 unpacked 확장 — reload만 시도
-        setTimeout(() => chrome.runtime.reload(), 1500);
-        return resolve({ ok: true, applied: true, newVersion: j.version, fallback: 'reload' });
-      }
-      chrome.runtime.requestUpdateCheck((status, details) => {
-        if (status === 'update_available' || status === 'no_update') {
-          // 1.5초 후 자동 reload (CRX 적용)
-          setTimeout(() => chrome.runtime.reload(), 1500);
-          resolve({ ok: true, applied: true, newVersion: j.version, status });
-        } else {
-          resolve({ ok: false, err: 'update check status: ' + status });
-        }
-      });
+    // 새 버전 있음 — 알림만 표시 (자동 reload 없음)
+    chrome.runtime.sendMessage({ type: 'SWGS_UPDATE_AVAILABLE', version: j.version }).catch(()=>{});
+    chrome.notifications.create('swgs-update-' + j.version, {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
+      title: '✨ Seastar GW 업데이트',
+      message: `v${j.version} 새 버전이 있습니다. 사이드패널에서 즉시 적용하세요.`,
+      priority: 1, requireInteraction: false
     });
+    return { ok: true, notified: true, newVersion: j.version };
   } catch (e) {
     return { ok: false, err: e.message };
   }
 }
 
-/* ════════ 자동 업데이트 (CF Pages 빌드 → 즉시 적용) ════════ */
+/* ════════ 자동 업데이트 (CF Pages 빌드 → CRX 실다운로드 + 알림) ════════
+ * ★ chrome.runtime.reload()는 "지금 디스크에 설치된 버전"으로 재시작만 할 뿐
+ *   update_url에서 새 CRX를 받아오지 않는다 — 실제 다운로드/설치는
+ *   chrome.runtime.requestUpdateCheck()가 담당한다. 이 호출이 빠지면
+ *   "즉시 업데이트"를 눌러도 옛 버전 그대로 재시작되어 "자동 업데이트 안 됨"처럼 보인다. */
 async function checkUpdate(verbose = false) {
   try {
     const r = await fetch(UPDATE_URL + '?_=' + Date.now(), { cache: 'no-store' });
@@ -115,53 +141,34 @@ async function checkUpdate(verbose = false) {
     await storage.set('swgs_server_version', j.version);
 
     if (compareVer(j.version, myVer) <= 0) {
-      // 최신 상태
       if (verbose) chrome.runtime.sendMessage({ type: 'SWGS_UPDATE_CHECKED', upToDate: true, version: myVer }).catch(()=>{});
       return;
     }
 
     console.log('[SGW SW] 새 버전 감지:', myVer, '→', j.version);
 
-    // ★★ 1순위: Chrome 표준 자동 업데이트 강제 트리거
-    //   ExtensionInstallForcelist로 설치된 경우 → CRX 자동 설치됨
-    if (chrome.runtime.requestUpdateCheck) {
-      chrome.runtime.requestUpdateCheck((status, details) => {
-        console.log('[SGW SW] requestUpdateCheck:', status, details);
-        if (status === 'update_available') {
-          // 다음 idle 시 자동 reload + 새 버전 활성화
-          chrome.notifications.create('swgs-update-ready-' + j.version, {
-            type: 'basic',
-            iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
-            title: '✨ Seastar GW v' + j.version + ' 자동 업데이트 준비 완료',
-            message: '브라우저 재시작 시 자동 적용됩니다. 즉시 적용하려면 클릭.',
-            priority: 2, requireInteraction: false,
-            buttons: [{ title: '🔄 즉시 적용 (재로드)' }]
-          });
-        }
-        // 업데이트 가능 표시 → 사이드패널에 통지
-        chrome.runtime.sendMessage({
-          type: 'SWGS_UPDATE_AVAILABLE',
-          version: j.version, status: status
-        }).catch(()=>{});
-      });
-    }
+    // ★ Chrome에 실제 CRX 재다운로드/설치를 요청 (policy update_url 기준)
+    try { await chrome.runtime.requestUpdateCheck(); } catch (e) { console.warn('[SGW SW] requestUpdateCheck 실패:', e); }
 
-    // ★★ 2순위: ZIP 백업 다운로드 (정책 미설치 PC를 위함)
-    const dlUrl = 'https://swgs-internal.pages.dev' + (j.zip || j.zip_latest || '/swgs-latest.zip');
-    chrome.downloads.download({
-      url: dlUrl, filename: `swgs-update/swgs-v${j.version}.zip`,
-      saveAs: false, conflictAction: 'overwrite'
-    }, () => { /* silent */ });
-  } catch (e) {
+    // 사이드패널에 알림 배너 표시
+    chrome.runtime.sendMessage({ type: 'SWGS_UPDATE_AVAILABLE', version: j.version }).catch(()=>{});
+
+    // OS 네이티브 알림 (클릭 시 다운로드 페이지)
+    chrome.notifications.create('swgs-update-' + j.version, {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
+      title: '✨ Seastar GW 업데이트',
+      message: `v${j.version} 새 버전이 있습니다. 클릭하여 업데이트`,
+      priority: 1, requireInteraction: false
+    });
+  } catch(e) {
     console.warn('[SGW SW] update check failed:', e);
   }
 }
 
-// 알림 클릭 시 즉시 reload (확장이 새 버전으로 재시작)
+// 업데이트 알림 클릭 시 사이드패널 배너 갱신 (자동 reload 없음 — 사용자가 직접 적용)
 chrome.notifications.onButtonClicked.addListener((nid, btnIdx) => {
-  if (nid.startsWith('swgs-update-ready-') && btnIdx === 0) {
-    chrome.runtime.reload();  // ★ 즉시 새 버전 활성화
-  }
+  // 자동 reload 제거 — 사용자가 사이드패널의 즉시 적용 버튼을 통해 명시적으로 적용
 });
 function compareVer(a, b) {
   const A = (a||'0').split('.').map(Number); const B = (b||'0').split('.').map(Number);
@@ -189,13 +196,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     case 'SWGS_TRIGGER_POLL':
       pollActivity().then(()=>sendResponse({ok:true}));
       return true;
+    case 'SWGS_APPLY_SETTINGS':
+      // 옵션 저장 시 — 폴링 주기 alarm 재생성
+      setupAlarms().then(()=>sendResponse({ok:true}));
+      return true;
     case 'SWGS_FORCE_UPDATE_CHECK':
       // ★ 사용자가 즉시 업데이트 확인 요청
       checkUpdate(true).then(()=>sendResponse({ok:true})).catch(e=>sendResponse({ok:false, err:e.message}));
       return true;
     case 'SWGS_FORCE_RELOAD':
-      sendResponse({ok:true});
-      setTimeout(() => chrome.runtime.reload(), 500);
+      // ★ reload 전에 반드시 requestUpdateCheck로 새 CRX를 실제로 받아와야 한다
+      //   (reload만 하면 디스크의 옛 버전으로 재시작될 뿐 — 업데이트 안 됨의 원인)
+      chrome.runtime.requestUpdateCheck().catch(()=>{}).finally(() => {
+        sendResponse({ok:true});
+        setTimeout(() => chrome.runtime.reload(), 1200);
+      });
       return true;
     case 'SWGS_AUTO_UPDATE_NOW':
       // ★ 원클릭 자동 업데이트 (다운로드/팝업 없이 끝까지 한 번에)
@@ -228,11 +243,12 @@ function handleLastSeenSnapshot(snap) {
 function handlePageNotification(msg) {
   // SGW의 sendNativeNotification 가로챈 알림 → chrome.notifications 발행 (종류별 차별화)
   const kind = msg.kind || 'notice';
+  // ★ 강력알림: 쪽지·공지·연차·결재 전부 사용자가 직접 닫기 전까지 화면에 유지
   const KIND_META = {
-    notice:   { prefix: '📢 공지',     priority: 1, requireInteraction: false },
-    leave:    { prefix: '🌴 연차',     priority: 2, requireInteraction: true  },  // ★ 연차는 강조 + 자동 안 닫힘
-    message:  { prefix: '💬 새 쪽지',  priority: 2, requireInteraction: false },  // ★ 쪽지는 priority 높임
-    approval: { prefix: '✍️ 결재',    priority: 2, requireInteraction: true  }
+    notice:   { prefix: '📢 공지',     priority: 2, requireInteraction: true },
+    leave:    { prefix: '🌴 연차',     priority: 2, requireInteraction: true },
+    message:  { prefix: '💬 새 쪽지',  priority: 2, requireInteraction: true },
+    approval: { prefix: '✍️ 결재',    priority: 2, requireInteraction: true }
   };
   const meta = KIND_META[kind] || { prefix: '📌', priority: 1, requireInteraction: false };
 
@@ -278,6 +294,7 @@ async function handleAuthSync(auth) {
     await storage.set(KEYS.EMP_NUM, auth.emp_num || auth.current_user_id);
   }
   if (auth.savedName) await storage.set(KEYS.EMP_NAME, auth.savedName);
+  if (auth.savedEmail) await storage.set(KEYS.USER_EMAIL, auth.savedEmail);
   if (auth.auth_token || auth.jwt) await storage.set(KEYS.AUTH_TOKEN, auth.auth_token || auth.jwt);
   await storage.set(KEYS.AUTH_AT, Date.now());
   await storage.set('swgs_persistent_login', true);  // 영구 플래그
@@ -285,11 +302,11 @@ async function handleAuthSync(auth) {
 }
 
 async function manualLogin(empNum, password) {
-  const host = (await storage.get(KEYS.GW_HOST)) || DEFAULTS.gw_host;
-  // 회사 그룹웨어 로그인 API (실제 endpoint에 맞게 조정 필요)
-  const r = await fetch(host + '/api/login', {
+  // ★ B9 수정: GW_HOST(그룹웨어) 대신 admin_host API 사용
+  const host = DEFAULTS.admin_host;
+  const r = await fetch(host + '/auth/employee-login', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ empNum, password })
+    body: JSON.stringify({ emp_num: empNum, password })
   });
   if (!r.ok) throw new Error('로그인 실패 (HTTP ' + r.status + ')');
   const j = await r.json();
@@ -305,6 +322,11 @@ async function doLogout() {
   await storage.remove(KEYS.EMP_NAME);
   await storage.remove(KEYS.AUTH_TOKEN);
   await storage.remove(KEYS.AUTH_AT);
+  await storage.remove('swgs_persistent_login');  // 자동복원 중단
+  // 연차/결재 스냅샷도 정리
+  await storage.remove(KEYS.SNAP_ME);
+  await storage.remove(KEYS.SNAP_LEAVE);
+  await storage.remove(KEYS.SNAP_APPROVALS);
 }
 
 console.log('[Seastar GW SW] started · ' + new Date().toISOString());

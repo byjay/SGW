@@ -1,276 +1,215 @@
-# Seastar Groupware (SGW) — Claude 세션 인계 노트
+# SGW — 작업지시서 (Claude 세션 인계)
 
-> 이 파일은 다음 Claude 세션이 즉시 작업을 이어갈 수 있도록 현재 상태를
-> 정리한 핸드오프 문서입니다. 새 대화 시작 시 가장 먼저 읽어주세요.
-
----
-
-## 📌 프로젝트 개요
-
-**Seastar Groupware (SGW)** — 사내 직원용 그룹웨어 + 브라우저 확장앱
-
-| 구성 | 위치 | 역할 |
-|------|------|------|
-| **본체 (Vite + React)** | `E:\code-project\swgs\` (루트) | 그룹웨어 React 앱 → CF Pages |
-| **확장 v1.0.4** | `extension/` | 사이드 패널 + 영구 로그인 + 알림 |
-| **설치기** | `installer/` | 사용자 PC 자동 설치 (.bat + ZIP) |
-| **Private Key** | `.keys/swgs.pem` | CRX 서명 (gitignored, **절대 공유 금지**) |
+> **새 세션 시작 시 이 파일을 가장 먼저 읽을 것.**
+> 이 폴더(`E:\code-project\swgs`)는 **SGW 전용**. SDU·auth 코드와 완전 격리됨.
 
 ---
 
-## 🌐 배포된 URL (전부 활성)
+## 📌 프로젝트 구성
 
-| 자원 | URL | 비고 |
-|--|--|--|
-| **그룹웨어 본체** | https://sgw-seastar-work.pages.dev/ | React 앱 (기존) |
-| **확장 자동 업데이트** | https://swgs-internal.pages.dev/ | CRX + updates.xml |
-| **사용자 설치기** | https://sgw-install.pages.dev/ | ZIP 다운로드 + 안내 |
-| **GitHub** | https://github.com/byjay/SGW | extension/ + installer/ |
+| 폴더/서비스 | 역할 | 배포 URL |
+|-------------|------|----------|
+| `extension/` | Chrome MV3 확장 (직원 사이드패널) | `swgs-internal.pages.dev` (CRX 자동배포) |
+| `installer/` | 사내 PC 원클릭 설치 (.bat 런처) | `sgw-install.pages.dev` |
+| `E:\code-project\sgw-admin\` | **별도 프로젝트** — 직원 DB 관리 (Cloudflare D1) | `sgw-admin.pages.dev` |
+| `E:\code-project\auth\` | **별도 프로젝트** — Naver+Google OAuth 라이브러리 | standalone (복사해서 사용) |
 
-**Extension ID**: `ajlojcldaocimafbolojgokhpdfhkpkb` (영구 고정)
-
----
-
-## ✅ 하던 일 (완료된 작업)
-
-### 1. 확장앱 v1.0.4 (extension/)
-- ✅ MV3 매니페스트 + update_url
-- ✅ 사이드 패널 4-tab UI (알림 / 메뉴 / 연차 / SEDMS)
-- ✅ **영구 로그인** (chrome.storage 자동 복원, 쿠키 청소에도 유지)
-- ✅ **연차 신청 폼 제출 자동 감지**
-- ✅ **쪽지 도착 DOM Mutation Observer** (발신자 표시)
-- ✅ 4종 알림 차별화 (📢 공지 / 🌴 연차 / 💬 쪽지 / ✍️ 결재)
-- ✅ 30분 자동 업데이트 (`chrome.runtime.requestUpdateCheck()` 강제 트리거)
-- ✅ 10개 페이지 빠른 메뉴 (홈/공지/메시지/채팅/연차/결재/캘린더/메일/SEDMS/관리자)
-- ✅ 8개 Chromium 브라우저 호환 (Chrome/Whale/Edge/Brave/Opera/Vivaldi/Yandex/Chromium)
-
-### 2. 자동 배포 인프라
-- ✅ `build.ps1` (forward-slash safe ZIP)
-- ✅ `build-crx.ps1` (Chrome `--pack-extension` 서명)
-- ✅ `deploy-cf.ps1` (CF Pages 자동 배포)
-- ✅ `get-crx-id.cjs` (Extension ID 계산)
-- ✅ `install-internal.bat` (사내 PC 정책 1회 등록)
-
-### 3. 사용자 설치기 (installer/)
-- ✅ `Install-SGW.bat` — 8개 브라우저 정책 동시 등록
-- ✅ `Uninstall-SGW.bat` — 정책 제거
-- ✅ `index.html` — 랜딩 페이지 (파란 테마)
-- ✅ `deploy.ps1` — sgw-install.pages.dev 배포
-- ✅ 자동 닫힘 방지 (PAUSE 모든 분기에)
-- ✅ Self-contained (외부 install.bat 의존 제거)
-
-### 4. 폴더 구조 정리 (2026-05-08)
-- ✅ SDU 프로젝트와 완전 분리
-  - 이전: `E:\code-project\SDU\swgs_app\` + `_installer-sgw\` + `_keys\swgs.pem`
-  - 현재: `swgs/extension/` + `swgs/installer/` + `swgs/.keys/swgs.pem` (자체 완결)
-- ✅ GitHub `byjay/SGW` repo에 push 완료 (commit b870e55)
+> **격리 원칙**: `swgs/` 는 extension + installer만. sgw-admin·auth는 별도 폴더.
 
 ---
 
-## 🔜 할 일 (다음 세션 작업 목록)
+## 🔢 현재 버전
 
-### 우선순위 높음
-
-- [ ] **★ SEDMS SSO 통합 (핵심 비전)**
-  - **목표**: 직원이 SGW 사원번호로 한 번 로그인 → **자동으로 SEDMS 진입** (재로그인 X)
-  - **사용자 시나리오**:
-    1. 직원이 도구 모음 ⭐ 클릭 → 사이드 패널
-    2. 사원번호 + 비밀번호 입력 (또는 영구 로그인 자동 인식)
-    3. [📂 SEDMS] 클릭 또는 자동 redirect
-    4. SEDMS가 이미 로그인된 상태로 열림 (SSO)
-  - **기술 옵션 (택일/병행)**:
-    1. **SAML / OAuth 정식 SSO**: 회사 IDP 있으면 가장 깨끗 (best practice)
-    2. **JWT 브릿지**: SGW 로그인 시 발급된 토큰을 SEDMS의 `Authorization: Bearer` 헤더로 주입 (declarativeNetRequest 활용)
-    3. **Cookie 공유**: 두 도메인이 sub/super 관계면 도메인 쿠키로 자동 전달
-    4. **확장이 자동 로그인 폼 채움**: SEDMS 로그인 페이지 도착 시 content script가 사원번호+비밀번호 자동 입력 후 submit (가장 간단, IDP 없을 때)
-  - **확장에 필요한 변경**:
-    - `manifest.json` `host_permissions`에 SEDMS 도메인 추가
-    - `content_scripts.matches`에 SEDMS 추가 (로그인 페이지 후킹용)
-    - `content/sedms-bridge.js` (신규) — SEDMS 페이지 진입 시 자동 인증 처리
-    - `background/service-worker.js`에 `case 'SWGS_OPEN_SEDMS'` 핸들러 추가
-    - `lib/storage.js` `DEFAULTS.sedms_host` 실제 URL로 갱신
-  - **선결 사항**:
-    - SEDMS 인증 방식 확인 (자체 ID/PW vs SGW 통합)
-    - 회사 IDP/SSO 인프라 존재 여부
-    - SEDMS 도메인 + 로그인 페이지 URL
-    - SGW와 SEDMS의 사원번호 동일 사용 여부
-
-- [ ] **그룹웨어 본체 ↔ 확장 실 데이터 연동 검증**
-  - 본체는 현재 MockServer 사용 중 (`services/mockServer.ts`)
-  - 확장은 `auth-bridge.js`로 localStorage 동기화 가정
-  - 실제 회사 그룹웨어 API 연결 시 endpoint 매핑 필요
-  - `gw_host` 변경: `lib/storage.js`의 `DEFAULTS.gw_host`
-
-- [ ] **SEDMS 실제 URL 확인 후 반영**
-  - 현재: `https://sedms.seastar.co.kr/` (placeholder)
-  - 사이드 패널의 [📂 SEDMS 열기] 링크 + 매뉴얼 갱신
-  - 위 SSO 통합 항목과 함께 진행
-
-- [ ] **사내 정식 IT 배포 테스트**
-  - 직원 PC 1대에서 `Install-SGW.bat` 검증
-  - 8개 정책 등록 확인 → 브라우저 재시작 → 자동 설치 확인
-  - 문제 발생 시 매뉴얼/FAQ 추가
-
-### 우선순위 중간
-- [ ] **쪽지 알림 정확도 향상**
-  - `page-bridge.js`의 MutationObserver는 SGW의 React 렌더링 패턴에 따라 false positive 가능
-  - 실제 쪽지 페이지 DOM 구조 분석 후 셀렉터 정밀화
-  - 현재: `[data-message-id], .message-item, .msg-item, .chat-message, [class*="MessageItem"]`
-
-- [ ] **연차 신청 감지 휴리스틱 개선**
-  - 현재 폼 submit 이벤트 + URL 패턴 휴리스틱
-  - SGW의 LeaveManagement.tsx 컴포넌트 분석해서 이벤트 명시적으로 후킹
-
-- [ ] **AI 요약 기능 비활성/활성**
-  - 현재 sidepanel은 SDU Master에 있던 AI 탭 일부 코드 흔적
-  - SGW에는 불필요 → 제거 또는 회의록 요약 기능으로 재활용
-
-- [ ] **알림 사운드 옵션**
-  - 현재 chrome.notifications `silent: false` (기본 사운드)
-  - 옵션 페이지에서 사운드 ON/OFF 토글 추가
-
-### 우선순위 낮음 (미래 기능)
-- [ ] **다중 계정 지원** — 사원번호 여러 개 전환
-- [ ] **알림 기록 보관함** — 받은 알림 7일 이력
-- [ ] **위젯 모드** — 사이드 패널 외 작은 PIP 창
-- [ ] **모바일 동기화** — chrome.storage.sync 활용
-- [ ] **알림 일정 설정** — 점심시간/퇴근 후 알림 OFF
-
-### 운영 태스크
-- [ ] **공식 매뉴얼 작성** — `installer/manual.html` 제작
-- [ ] **운영 가이드** — IT 관리자용 (정책 일괄 배포, 문제 해결)
-- [ ] **버전 정책** — 메이저/마이너 변경 기준 정의
-- [ ] **CHANGELOG.md** — 버전별 변경 이력
+| 항목 | 값 |
+|------|-----|
+| Extension 버전 | **v1.0.8** (빌드·CRX·실Chrome로드 검증 + **swgs-internal.pages.dev 배포 완료 LIVE**) |
+| Extension ID | `ajlojcldaocimafbolojgokhpdfhkpkb` (영구 고정 · v1.0.8에서도 ID 유지 확인) |
+| 정식 도메인 | **`sgw.seastar.work`** (CF Pages 커스텀 도메인 active/cert active — API 확인 2026-07-06). 프로젝트 내부명 `sgw-seastar-work.pages.dev` |
+| 관리자 시스템 | `sgw-admin.pages.dev` (D1 + Pages Functions) |
+| **SEDMS 실제 URL** | **`http://dms.seastar.work`** (그룹웨어 appConfig.EXTERNAL.DMS_URL 기준 — 기존 `sedms.seastar.co.kr`는 오기, v1.0.8에서 정정) |
+| 마지막 업데이트 | 2026-06-25 |
 
 ---
 
-## 🎯 향후 SSO 비전 (SGW + SEDMS 통합)
+## ✅ 완료된 작업 (누적)
 
+### Extension (v1.0.8) — 2026-06-25 (SDU 참조 완성판)
+- **★ SEDMS URL 정정**: `sedms.seastar.co.kr`(오기) → **`http://dms.seastar.work`** (그룹웨어 본체 appConfig 기준). manifest host_permissions/content_scripts, storage.js, sidepanel 메뉴카드, auth-bridge 감지 전부 일괄 수정.
+- **★ 연차 탭 실데이터 구현**: 그룹웨어 localStorage(`app_users`/`app_leave_requests`)를 content script(auth-bridge.js)가 chrome.storage로 스냅샷 → 사이드패널이 총/사용/잔여 연차 + 최근 신청내역(상태 뱃지) 렌더. (placeholder "로딩 중..." 제거)
+- **★ SEDMS 대기결재 실데이터**: `app_approvals`에서 본인(approverId) pending 결재만 추려 사이드패널에 목록 렌더. (placeholder 제거)
+- **★ 설정(Options) 페이지 신설**: `options/options.html`+`options.js` — 그룹웨어/SEDMS 주소, OS알림 on/off, 폴링주기(1~30분) 설정. 저장 시 SW가 alarm 주기 재생성(`SWGS_APPLY_SETTINGS`).
+- **★ 빠른 접근**: 단축키 `Ctrl+Shift+S`(SEDMS) / `Ctrl+Shift+G`(그룹웨어) + 확장아이콘 우클릭 메뉴(contextMenus).
+- **★ BUG FIX**: build.ps1 `$includePatterns`에 `options/*` 누락 → 추가(없으면 options_page 참조 깨짐).
+- 검증: manifest JSON 유효 · 전 JS `node --check` 통과 · manifest 참조파일 12/12 존재 · vm 샌드박스 런타임 스모크(전 모듈 로드+SW 리스너 등록) 통과 · 연차/결재 계산 assert 통과 · 실제 Chrome 헤드리스 로드 에러 0 · `--pack-extension` 정상 패킹 · Extension ID 유지 확인.
+- **★ 배포 LIVE (2026-06-25)**: CF Pages `swgs-internal` 프로젝트 신규 생성 후 배포. 라이브 확인 — `/`(랜딩 다운로드) 200 · `version.json` 200 · `updates.xml` 200 · `swgs-latest.crx` 200 · `swgs-latest.zip` 200 · `install-internal.bat` 200. 직원 PC는 `install-internal.bat`(Chrome/Whale/Edge 강제설치 정책) → 30분 내 자동 업데이트.
+
+### Extension (v1.0.7)
+- MV3 Manifest + `update_url` (자동 업데이트)
+- 사이드패널 4탭 UI (알림/메뉴/연차/SEDMS)
+- **★ Phase 4**: 사이드패널 로그인 폼 → `sgw-admin.pages.dev/auth/employee-login` API 연동
+  - 사원번호 + 비밀번호 입력 → JWT → chrome.storage 저장
+- **★ BUG FIX**: `attachUI()` dead-code 버그 수정 (UI 이벤트가 연결 안 되던 문제)
+- 영구 로그인 자동 복원 (`auth-bridge.js`: chrome.storage → SGW localStorage 재주입)
+- 원클릭 자동 업데이트 버튼 (`⚡ 지금 업데이트`)
+- 정식 도메인 `sgw.seastar.work` 단일 연결 (CF Pages 빌드 주소 fallback 제거)
+- `SWGS_AUTO_UPDATE_NOW` 메시지 핸들러 (service-worker)
+
+### sgw-admin (`E:\code-project\sgw-admin\`)
+- Cloudflare D1 (`sgw-employees` DB) + Pages Functions
+- 관리자 로그인 (PBKDF2 해시 + JWT HttpOnly 쿠키)
+- 직원 CRUD API (사원번호/이름/전화/이메일/부서/직책)
+- **직원 로그인 API**: `POST /auth/employee-login` (사원번호+비밀번호 → JWT 7일)
+- 감사 로그 (모든 CRUD/로그인 DB 기록)
+- **JWT_SECRET** Cloudflare Pages Secret 등록 완료
+- 단일 페이지 관리자 UI (`public/index.html`)
+
+### 설치기 (installer/)
+- `Install-SGW.bat` → 런처 패턴 (서버에서 PS1 내려받아 실행)
+- 8개 Chromium 브라우저 정책 동시 등록
+- `Force-Update-SGW.bat` — 강제 업데이트
+
+### auth 라이브러리 (`E:\code-project\auth\`) — 완전 독립 프로젝트
+- Naver + Google OAuth (CF Pages Functions, npm 의존성 0)
+- 단순 로그인 + **승인 플로우** (가입신청 → 관리자 승인) 두 가지 버전
+- AI 에이전트 통합 가이드 (`AGENT-GUIDE.md`)
+- `/oauth-cf` 스킬로 어느 CF Pages 프로젝트에나 자동 주입 가능
+
+---
+
+## 🔜 다음 세션 작업 목록 (우선순위 순)
+
+### ★ P1 — sgw-admin 초기 설정 (마스터가 직접)
 ```
-[직원 PC]
-  ↓ 도구 모음 ⭐ 클릭
-[Seastar GW 사이드 패널]
-  ↓ 사원번호 한 번 로그인 (영구 유지)
-  ↓ [📂 SEDMS] 클릭
-[자동 SSO 처리 — 사용자 클릭 0회]
-  ├─ Option 1: SAML/OAuth IDP 통한 정식 SSO
-  ├─ Option 2: JWT 브릿지 (declarativeNetRequest 헤더 주입)
-  ├─ Option 3: Cookie 공유 (도메인 sub/super)
-  └─ Option 4: content script 자동 로그인 폼 채움
-  ↓
-[SEDMS — 이미 로그인된 상태로 진입]
-  · 결재 / 문서 / 회람 즉시 사용 가능
-  · 재로그인 불필요
+1. https://sgw-admin.pages.dev 접속
+2. 관리자 계정 설정 (최초 1회, /auth/setup)
+3. 직원 등록 (사원번호 + 이름 + 비밀번호)
+4. 직원 PC에서 확장 사이드패널 로그인 테스트
 ```
+- **이게 안 되면 아무것도 동작하지 않음** — 최우선
 
-**핵심 가치 제안**: "사원이 사내 시스템 N개 다닐 때마다 매번 로그인 안 함"
-- SGW 사원번호 1회 로그인 → SEDMS / 그룹웨어 / 메일 / 캘린더 모두 자동 인증
-- 도구 모음 ⭐ 한 번 → 회사의 모든 디지털 자산에 즉시 접근
+### ★ P2 — SEDMS SSO (핵심 비전)
+- 사원번호 1회 로그인 → SEDMS 자동 진입 (재로그인 없음)
+- 구현 옵션 (선택):
+  1. `declarativeNetRequest`로 Authorization 헤더 주입 (가장 깨끗)
+  2. content script로 SEDMS 로그인 폼 자동 채움 (빠름)
+  3. 도메인 쿠키 공유 (seastar.co.kr 하위 도메인이면)
+- 선결: SEDMS 실제 URL + 인증 방식 확인
+
+### P3 — Extension v2.0.0 (직원 전용 데스크탑 워크스페이스)
+- `manifest.json` v2.0.0, name "Seastar Workspace"
+- `chrome.commands` — `Ctrl+Shift+S` → SEDMS 새창 / `Ctrl+Shift+G` → 그룹웨어
+- `chrome.windows.create({ type: 'popup', state: 'maximized' })` — standalone 진입
+- `chrome.contextMenus` — 우클릭 메뉴 (SEDMS 새 창, 그룹웨어 새 창)
+- 5탭 UI (알림/메뉴/연차/SEDMS/그룹웨어)
+- 디자인 토큰 통일 (Vantablack, Pretendard, Solar 아이콘)
+
+### P4 — Naver/Google OAuth 연동 (선택 — auth 라이브러리 사용)
+- sgw.seastar.work 또는 sgw-admin에 소셜 로그인 추가 필요 시
+- `E:\code-project\auth\AGENT-GUIDE.md` 읽고 `/oauth-cf` 스킬 실행
+- Naver 앱: `https://developers.naver.com/apps` (앱 1개, 콜백 URL만 추가)
+- Google 앱: `https://console.cloud.google.com/apis/credentials`
+
+### P5 — 운영 안정화
+- 직원 PC 1대에서 `Install-SGW.bat` → 정책 등록 → 자동 설치 검증
+- `chrome://policy/` 에서 8개 정책 등록 확인
+- 알림 false positive 줄이기 (page-bridge.js MutationObserver 셀렉터 정밀화)
 
 ---
 
-## 🔧 빌드/배포 빠른 참조
+## 🔧 개발 빠른 참조
 
-### 일상 개발 흐름
+### 확장 빌드 + 배포
 ```powershell
-# 1. 확장 코드 수정
 cd E:\code-project\swgs\extension
-# 코드 변경...
-
-# 2. 빌드 + 배포 (한 번에)
 powershell -ExecutionPolicy Bypass -File deploy-cf.ps1
-# → swgs-internal.pages.dev 갱신
-# → 30분 내 사용자 PC에 자동 적용
-
-# 3. 설치기 변경 시
-cd ..\installer
-powershell -ExecutionPolicy Bypass -File deploy.ps1
-# → sgw-install.pages.dev 갱신
-
-# 4. GitHub push
-cd ..
-git add .
-git commit -m "..."
-git push origin main
+# → swgs-internal.pages.dev 갱신 → 30분 내 직원 PC 자동 업데이트
 ```
 
 ### 버전 올리기
 ```powershell
-# extension/manifest.json 의 "version" 수동 수정
-# 예: "1.0.4" → "1.0.5"
-# 그 후 deploy-cf.ps1 실행 → 자동 배포
+# extension/manifest.json "version" 수동 수정 후
+powershell -ExecutionPolicy Bypass -File deploy-cf.ps1
 ```
 
-### Extension ID 재확인
-```bash
-cd extension
-node get-crx-id.cjs
+### sgw-admin 재배포
+```powershell
+cd E:\code-project\sgw-admin
+npx wrangler pages deploy public --project-name sgw-admin --commit-dirty=true
+```
+
+### 확장 Extension ID 확인
+```powershell
+cd extension; node get-crx-id.cjs
 # 출력: ajlojcldaocimafbolojgokhpdfhkpkb
 ```
 
----
-
-## 🔑 키 관리
-
-`.keys/swgs.pem` (RSA private key, ~1.7 KB)
-- **절대 GitHub에 커밋하지 말 것** (.gitignore 등록됨)
-- 분실 시 Extension ID 변경 → 모든 PC 재설치 필요
-- **반드시 별도 백업** (USB / 클라우드 비공개 폴더 권장)
-- 새 키로 빌드 시 모든 정책 재배포 필요
-
----
-
-## 📞 알려진 이슈 / FAQ
-
-### Q. 사용자 PC에서 설치가 안 됨
-- UAC 거부 → `Install-SGW.bat` 우클릭 → "관리자 권한으로 실행"
-- 정책 등록 확인: `chrome://policy/` 또는 `whale://policy/`
-- 정책 다시 로드 버튼 클릭
-
-### Q. 확장 자동 업데이트가 안 옴
-- 사이드 패널 [🔄 업데이트 확인] 클릭으로 강제 폴링
-- `chrome://extensions/` → 우상단 [업데이트] 버튼
-
-### Q. EXE로 만들었더니 Defender가 차단
-- PS2EXE 결과는 false positive로 격리됨
-- code-signing 인증서 없으면 .bat이 더 안정적
-- 향후 인증서 도입 시 `Install-Seastar.ps1` (별도 보관) 활용 가능
-
-### Q. 영구 로그인이 풀림
-- 시크릿 모드 사용 시 풀림 (정상 동작)
-- 브라우저 데이터 직접 삭제 시 풀림 → 그룹웨어 페이지 진입 시 자동 복원
-- chrome.storage.local 직접 청소해도 풀림 → 같은 자동 복원 동작
-
----
-
-## 📦 GitHub Repo 구조
-
-```
-byjay/SGW (main)
-├── 본체 React 앱 (기존)
-│   ├── App.tsx, components/, services/
-│   ├── package.json, vite.config.ts
-│   └── dist/ (빌드 산출물)
-└── extension/ + installer/ (신규)
-    └── ... (이 문서의 폴더 구조 참조)
-```
-
-마지막 commit: **b870e55** — "Refactor: Move extension + installer into swgs/ for self-contained dev"
-
----
-
-## 🔄 다음 Claude 세션 시작 시 추천 첫 명령
-
-```
-1. 이 CLAUDE.md를 먼저 읽어주세요
-2. git log --oneline -5 로 최근 변경 확인
-3. extension/manifest.json 의 version 확인 (현재 1.0.4)
-4. https://swgs-internal.pages.dev/version.json 으로 배포 상태 확인
-5. 위 "할 일" 섹션 중 하나 골라서 진행
+### 배포 상태 확인
+```powershell
+curl https://swgs-internal.pages.dev/version.json
+curl https://sgw-admin.pages.dev/auth/status
 ```
 
 ---
 
-**최종 업데이트**: 2026-05-08
-**작업자**: designsir + Claude (Sonnet)
-**다음 마일스톤**: 사내 IT 배포 테스트 → 실제 직원 사용 시작
+## 📁 프로젝트 파일 구조 (핵심)
+
+```
+E:\code-project\swgs\            ← 이 프로젝트 (SGW 전용)
+├── CLAUDE.md                    ← 지금 이 파일
+├── extension/                   ← Chrome 확장 소스
+│   ├── manifest.json            ← v1.0.7, ID: ajlojcldaocimafbolojgokhpdfhkpkb
+│   ├── background/service-worker.js
+│   ├── content/auth-bridge.js   ← SGW 페이지 ↔ chrome.storage 동기화
+│   ├── content/page-bridge.js   ← 알림 가로챔 (React 주입)
+│   ├── lib/storage.js           ← KEYS, DEFAULTS (gw_host, admin_host)
+│   ├── sidepanel/sidepanel.js   ← UI 로직 + Phase 4 로그인 API 연동
+│   ├── sidepanel/sidepanel.html ← 로그인 폼 (사원번호 + 비밀번호)
+│   ├── build.ps1                ← ZIP 빌드
+│   ├── build-crx.ps1            ← CRX 서명 빌드
+│   └── deploy-cf.ps1            ← CF Pages 배포
+├── installer/                   ← 사내 PC 설치기
+│   ├── Install-SGW.bat          ← 런처 (.bat → PS1 서버에서 내려받아 실행)
+│   └── Install-SGW.ps1          ← 실제 설치 로직 (서버 호스팅)
+└── .keys/swgs.pem               ← CRX 서명 키 (gitignored, 절대 공유 금지)
+
+E:\code-project\sgw-admin\      ← 직원 관리 시스템 (별도 프로젝트)
+E:\code-project\auth\           ← OAuth 라이브러리 (별도 프로젝트, 공용)
+```
+
+---
+
+## 🔑 보안 / 키 관리
+
+| 항목 | 위치 | 주의 |
+|------|------|------|
+| CRX 서명 키 | `.keys/swgs.pem` | 분실 = Extension ID 변경 = 전 직원 재설치 |
+| JWT_SECRET | CF Pages Secret (sgw-admin) | 등록 완료 (96자 랜덤 hex) |
+| sgw-admin 비밀번호 | 마스터만 알고 있음 | `/auth/setup` 최초 1회만 가능 |
+
+---
+
+## ❓ 알려진 이슈 / FAQ
+
+| 증상 | 원인 / 해결 |
+|------|-------------|
+| 설치 안 됨 | `Install-SGW.bat` 우클릭 → 관리자 권한으로 실행 |
+| 자동 업데이트 안 옴 | 사이드패널 `⚡ 지금 업데이트` 클릭 |
+| 로그인이 풀림 | 시크릿 모드 or 브라우저 데이터 삭제 → SGW 페이지 진입 시 자동 복원 |
+| sgw-admin.pages.dev 접속 안 됨 | `setup_done: false` 상태 = 관리자 계정 미설정 → P1 작업 필요 |
+
+---
+
+## 🧭 새 세션 시작 시 첫 5분
+
+```
+1. 이 CLAUDE.md 읽기
+2. git log --oneline -5         (최근 커밋 확인)
+3. extension/manifest.json      (현재 버전 확인 = v1.0.7)
+4. curl https://swgs-internal.pages.dev/version.json   (배포 상태)
+5. curl https://sgw-admin.pages.dev/auth/status         (관리자 설정 여부)
+6. 위 "다음 세션 작업 목록"에서 P1부터 착수
+```
+
+---
+
+*최종 업데이트: 2026-05-14 | 작업자: designsir + Claude (Sonnet)*

@@ -1,12 +1,13 @@
 @echo off
-:: â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-:: Seastar Groupware - ì‚¬ë‚´ PC ìžë™ ì„¤ì¹˜ + ìžë™ ì—…ë°ì´íŠ¸ ì •ì±…
-:: â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-:: IT ê´€ë¦¬ìžê°€ ê° ì§ì› PCì—ì„œ í•œ ë²ˆë§Œ ì‹¤í–‰:
-:: 1. Chrome/Whaleì— Seastar GW ìžë™ ì„¤ì¹˜ (ë‹¤ìŒ ì‹œìž‘ ì‹œ)
-:: 2. ìƒˆ ë²„ì „ ë°°í¬ ì‹œ ìžë™ ì—…ë°ì´íŠ¸
-:: 3. ì‚¬ìš©ìž í´ë¦­ 0íšŒ â€” ì‚¬ì´ë“œ íŒ¨ë„ í´ë¦­ìœ¼ë¡œ ì¦‰ì‹œ ì‚¬ìš©
-:: â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+:: ====================================================================
+:: Seastar Groupware - »ç³» ÀÚµ¿ ¼³Ä¡ Á¤Ã¥
+:: ====================================================================
+:: IT °ü¸®ÀÚ°¡ °¢ Á÷¿ø PC¿¡¼­ ÇÑ ¹ø¸¸ ½ÇÇà:
+:: 1. ¼±ÅÃÇÑ ºê¶ó¿ìÀú¿¡ Seastar GW ÀÚµ¿ ¼³Ä¡ (Á¤Ã¥ ±â¹Ý)
+:: 2. Chrome/Edge: »õ ¹öÀü ¹èÆ÷ ½Ã ÀÚµ¿ ¾÷µ¥ÀÌÆ®
+::    Whale: Á¤Ã¥ ÀÚµ¿¼³Ä¡ ¹ÌÁö¿ø È®ÀÎ(2026-07-03) - ¼öµ¿¼³Ä¡ ¾È³»¸¸ Ç¥½Ã
+:: 3. ÀÌÈÄ »ç¿ëÀÚ´Â Å¬¸¯ 0È¸ - »çÀÌµåÆÐ³Î¸¸ ¿­¸é ¹Ù·Î »ç¿ë
+:: ====================================================================
 
 setlocal
 set EXT_ID=ajlojcldaocimafbolojgokhpdfhkpkb
@@ -14,7 +15,7 @@ set UPDATE_URL=https://swgs-internal.pages.dev/updates.xml
 
 echo.
 echo ============================================================
-echo  Seastar Groupware - ì‚¬ë‚´ ìžë™ ì„¤ì¹˜ ì •ì±…
+echo  Seastar Groupware - »ç³» ÀÚµ¿ ¼³Ä¡ Á¤Ã¥
 echo ============================================================
 echo  Extension ID : %EXT_ID%
 echo  Update URL   : %UPDATE_URL%
@@ -22,19 +23,107 @@ echo ============================================================
 echo.
 
 net session >nul 2>&1
-if %errorLevel% neq 0 (echo [ERROR] ê´€ë¦¬ìž ê¶Œí•œ í•„ìš”. & pause & exit /b 1)
+if %errorLevel% neq 0 (
+  echo [ERROR] °ü¸®ÀÚ ±ÇÇÑÀÌ ÇÊ¿äÇÕ´Ï´Ù.
+  echo         ÀÌ ÆÄÀÏÀ» ¿ìÅ¬¸¯ - "°ü¸®ÀÚ ±ÇÇÑÀ¸·Î ½ÇÇà" ÇÏ¼¼¿ä.
+  pause
+  exit /b 1
+)
 
-echo [1/3] Chrome ì •ì±… ë“±ë¡...
-reg add "HKLM\SOFTWARE\Policies\Google\Chrome\ExtensionInstallForcelist" /v 1 /t REG_SZ /d "%EXT_ID%;%UPDATE_URL%" /f >nul
-reg add "HKLM\SOFTWARE\Policies\Google\Chrome\ExtensionInstallSources" /v 1 /t REG_SZ /d "https://swgs-internal.pages.dev/*" /f >nul
+echo  ¼³Ä¡ÇÒ ºê¶ó¿ìÀú¸¦ ¼±ÅÃÇÏ¼¼¿ä.
+echo.
+echo   [1] Chrome           - ÀÚµ¿¼³Ä¡ + ÀÚµ¿¾÷µ¥ÀÌÆ® È®ÀÎµÊ (±ÇÀå)
+echo   [2] Edge             - ÀÚµ¿¼³Ä¡ + ÀÚµ¿¾÷µ¥ÀÌÆ® È®ÀÎµÊ
+echo   [3] Chrome + Edge    - µÑ ´Ù (±âº»°ª)
+echo   [4] Whale(³×ÀÌ¹ö)    - Á¤Ã¥ ÀÚµ¿¼³Ä¡ ¹ÌÁö¿ø È®ÀÎµÊ, ¼öµ¿¼³Ä¡ ¾È³»¸¸ Ç¥½Ã
+echo.
+choice /c 1234 /m "¼±ÅÃ"
+set SEL=%errorlevel%
 
-echo [2/3] Whale ì •ì±… ë“±ë¡...
-reg add "HKLM\SOFTWARE\Policies\NaverCorp\Whale\ExtensionInstallForcelist" /v 1 /t REG_SZ /d "%EXT_ID%;%UPDATE_URL%" /f >nul
-reg add "HKLM\SOFTWARE\Policies\NaverCorporation\Whale\ExtensionInstallForcelist" /v 1 /t REG_SZ /d "%EXT_ID%;%UPDATE_URL%" /f >nul 2>&1
-
-echo [3/3] Edge ì •ì±… ë“±ë¡...
-reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallForcelist" /v 1 /t REG_SZ /d "%EXT_ID%;%UPDATE_URL%" /f >nul 2>&1
+set DO_CHROME=0
+set DO_EDGE=0
+set DO_WHALE=0
+if "%SEL%"=="1" set DO_CHROME=1
+if "%SEL%"=="2" set DO_EDGE=1
+if "%SEL%"=="3" set DO_CHROME=1
+if "%SEL%"=="3" set DO_EDGE=1
+if "%SEL%"=="4" set DO_WHALE=1
 
 echo.
-echo ì™„ë£Œ. ëª¨ë“  ë¸Œë¼ìš°ì € ì™„ì „ ì¢…ë£Œ í›„ ìž¬ì‹œìž‘ â†’ ìžë™ ì„¤ì¹˜
+
+if "%DO_WHALE%"=="1" (
+  echo ============================================================
+  echo  [Whale ¾È³»] WhaleÀº Á¤Ã¥ ±â¹Ý ÀÚµ¿¼³Ä¡¸¦ Áö¿øÇÏÁö ¾Ê´Â °ÍÀ¸·Î
+  echo  È®ÀÎµÇ¾ú½À´Ï´Ù - 2026-07-03 ½ÇÃø, whale://policy ¿¡ ¹Ìµî·Ï.
+  echo  ¾Æ·¡ ¹æ¹ýÀ¸·Î ¼öµ¿ ¼³Ä¡ÇÏ¼¼¿ä.
+  echo ============================================================
+  echo.
+  echo   1. Whale ÁÖ¼ÒÃ¢¿¡ chrome://extensions ÀÔ·Â
+  echo   2. ¿ìÃø »ó´Ü "°³¹ßÀÚ ¸ðµå" ÄÑ±â
+  echo   3. "¾ÐÃàÇØÁ¦ µÈ È®Àå¾Û ¼³Ä¡" Å¬¸¯
+  echo   4. ÀÌ ÆÄÀÏ°ú °°Àº À§Ä¡ÀÇ SeastarGW Æú´õ ¼±ÅÃ
+  echo   5. »õ ¹öÀüÀÌ ³ª¿Ã ¶§¸¶´Ù ±× Ä«µåÀÇ »õ·Î°íÄ§ ¾ÆÀÌÄÜÀ» ¼öµ¿À¸·Î Å¬¸¯
+  echo      WhaleÀº ÀÚµ¿ ¾÷µ¥ÀÌÆ®°¡ µÇÁö ¾Ê½À´Ï´Ù.
+  echo.
+  goto :end
+)
+
+if "%DO_CHROME%"=="0" if "%DO_EDGE%"=="0" (
+  echo ¼±ÅÃµÈ ºê¶ó¿ìÀú°¡ ¾ø½À´Ï´Ù. Á¾·áÇÕ´Ï´Ù.
+  goto :end
+)
+
+if "%DO_CHROME%"=="1" (
+  echo [Chrome] Á¤Ã¥ µî·Ï...
+  reg add "HKLM\SOFTWARE\Policies\Google\Chrome\ExtensionInstallForcelist" /v 1 /t REG_SZ /d "%EXT_ID%;%UPDATE_URL%" /f >nul
+  reg add "HKLM\SOFTWARE\Policies\Google\Chrome\ExtensionInstallSources" /v 1 /t REG_SZ /d "https://swgs-internal.pages.dev/*" /f >nul
+)
+
+if "%DO_EDGE%"=="1" (
+  echo [Edge] Á¤Ã¥ µî·Ï...
+  reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge\ExtensionInstallForcelist" /v 1 /t REG_SZ /d "%EXT_ID%;%UPDATE_URL%" /f >nul 2>&1
+)
+
+echo.
+echo ============================================================
+echo  ·¹Áö½ºÆ®¸® µî·Ï ¿Ï·á!
+echo ============================================================
+echo.
+echo  [Áß¿ä] Á¤Ã¥Àº ºê¶ó¿ìÀú¸¦ "¿ÏÀüÈ÷ Á¾·á"ÇØ¾ß¸¸ Àû¿ëµË´Ï´Ù.
+echo  Ã¢À» ´Ý´Â °Í¸¸À¸·Î´Â ºÎÁ·ÇÕ´Ï´Ù (¹é±×¶ó¿îµå ½ÇÇà ¶§¹®).
+echo.
+choice /c YN /m "Áö±Ý ºê¶ó¿ìÀú¸¦ ÀÚµ¿À¸·Î ¿ÏÀüÈ÷ Àç½ÃÀÛÇÒ±î¿ä? (Y=¿¹ ÀÚµ¿Àç½ÃÀÛ / N=¾Æ´Ï¿À ³ªÁß¿¡ Á÷Á¢)"
+if errorlevel 2 goto :manual
+if errorlevel 1 goto :autorestart
+
+:autorestart
+echo.
+echo  ºê¶ó¿ìÀú¸¦ ¿ÏÀüÈ÷ Á¾·áÇÕ´Ï´Ù...
+if "%DO_CHROME%"=="1" taskkill /F /IM chrome.exe /T >nul 2>&1
+if "%DO_EDGE%"=="1" taskkill /F /IM msedge.exe /T >nul 2>&1
+timeout /t 2 /nobreak >nul
+if "%DO_CHROME%"=="1" (
+  echo  ChromeÀ» ´Ù½Ã ½ÃÀÛÇÕ´Ï´Ù...
+  start "" "chrome.exe" >nul 2>&1
+)
+if "%DO_EDGE%"=="1" (
+  echo  Edge¸¦ ´Ù½Ã ½ÃÀÛÇÕ´Ï´Ù...
+  start "" "msedge.exe" >nul 2>&1
+)
+echo.
+echo ============================================================
+echo  ¿Ï·á! Àá½Ã ÈÄ ºê¶ó¿ìÀú°¡ ¿­¸®¸ç È®ÀåÀÌ ÀÚµ¿ ¼³Ä¡µË´Ï´Ù.
+echo  (ÁÖ¼ÒÃ¢¿¡ chrome://policy ¶Ç´Â edge://policy ÀÔ·Â - µî·Ï È®ÀÎ °¡´É)
+echo ============================================================
+goto :end
+
+:manual
+echo.
+echo ============================================================
+echo  µî·Ï ¿Ï·á. ¾Æ·¡ ¹æ¹ýÀ¸·Î "ÀÛ¾÷°ü¸®ÀÚ¿¡¼­ ¿ÏÀüÈ÷ Á¾·á" ÈÄ
+echo  ´Ù½Ã ÄÑ¸é ÀÚµ¿ ¼³Ä¡µË´Ï´Ù. (Ã¢¸¸ ´ÝÀ¸¸é Àû¿ë ¾È µÉ ¼ö ÀÖÀ½)
+echo  (ÁÖ¼ÒÃ¢¿¡ chrome://policy ¶Ç´Â edge://policy ÀÔ·Â - µî·Ï È®ÀÎ °¡´É)
+echo ============================================================
+
+:end
 pause
