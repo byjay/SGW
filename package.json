@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "postbuild": "npm run scan:orphan -- --guard && npm run verify:nas && npm run verify:nas-audit",
+    "preview": "vite preview",
+    "scan:orphan": "node scripts/scan-orphan.mjs",
+    "verify:nas": "node scripts/verify-sgw-nas-local.cjs",
+    "verify:nas-audit": "node scripts/verify-nas-audit.mjs",
+    "verify": "npm run scan:orphan -- --guard && npm run verify:nas && npm run verify:nas-audit"
   },
   "dependencies": {
     "@react-oauth/google": "0.12.1",

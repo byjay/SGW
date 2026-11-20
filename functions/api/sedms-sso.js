@@ -23,8 +23,6 @@
 import { readAuth } from '../_lib/rbac.js';
 import { buildSedmsSsoUrl } from '../_lib/sgw-sso.js';
 
-// 사내 이메일 도메인(트러스트 바운더리 최소 방어 — mock 로그인 상태에서만 의미).
-const ALLOWED_EMAIL_DOMAIN = '@seastargo.com';
 const SEDMS_BASE = 'https://sedms.app';
 
 function htmlError(status, message) {
@@ -68,31 +66,14 @@ export async function onRequestGet({ request, env }) {
       sgw_role: authUser.role || null,
     };
   } else {
-    // ── 2. mock 로그인 폴백 (서버 검증 신원 없음) ───────────────────────────
-    //   클라이언트가 준 값 사용 + 사내 도메인 강제(최소 방어).
-    const email = (url.searchParams.get('email') || '').trim().toLowerCase();
-    const name = (url.searchParams.get('name') || '').trim();
-    const empId = (url.searchParams.get('emp_id') || '').trim();
-    const role = (url.searchParams.get('role') || '').trim();
-    const dept = (url.searchParams.get('dept') || '').trim();
-
-    if (!email || !name) {
-      return wantJson
-        ? Response.json({ ok: false, error: 'missing_identity' }, { status: 400 })
-        : htmlError(400, '로그인 정보가 없습니다. SGW에 로그인 후 다시 시도하세요.');
-    }
-    if (!email.endsWith(ALLOWED_EMAIL_DOMAIN)) {
-      return wantJson
-        ? Response.json({ ok: false, error: 'domain_not_allowed' }, { status: 403 })
-        : htmlError(403, `사내 이메일(${ALLOWED_EMAIL_DOMAIN}) 계정만 SEDMS에 진입할 수 있습니다.`);
-    }
-    identity = {
-      employee_id: empId || email,
-      name,
-      email,
-      dept: dept || null,
-      sgw_role: role || null,
-    };
+    // ── 2. 서버 검증 신원 없음 → 거부(fail-closed) ─────────────────────────
+    //   과거엔 쿼리스트링(email/name/emp_id)을 그대로 서명했는데, 그건 임의 사용자가
+    //   타인(관리자) 신원으로 SEDMS 세션을 획득할 수 있는 위조 경로였다.
+    //   현재 /api/* 는 _middleware.js 인증 게이트 뒤이므로 이 분기는 도달 자체가 안 되며,
+    //   혹시 게이트가 바뀌더라도 신원 위조는 절대 허용하지 않는다.
+    return wantJson
+      ? Response.json({ ok: false, error: 'auth_required' }, { status: 401 })
+      : htmlError(401, '로그인 정보가 없습니다. SGW에 로그인 후 다시 시도하세요.');
   }
 
   // ── 3. 서명 URL 생성 ─────────────────────────────────────────────────────

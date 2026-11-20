@@ -7,10 +7,7 @@
 import { readAuth } from '../_lib/rbac.js';
 
 export async function onRequestGet({ request, env }) {
-  console.log('[DEBUG me.js] cookie header=', request.headers.get('cookie'));
-  console.log('[DEBUG me.js] env.JWT_SECRET set?', !!env.JWT_SECRET, 'env.AUTH_COOKIE=', env.AUTH_COOKIE);
   const user = await readAuth(request, env);
-  console.log('[DEBUG me.js] user=', JSON.stringify(user));
   if (!user) {
     return new Response(
       JSON.stringify({ ok: false, error: '로그인이 필요합니다' }),
@@ -19,6 +16,10 @@ export async function onRequestGet({ request, env }) {
   }
   return new Response(
     JSON.stringify({ ok: true, user }),
-    { headers: { 'content-type': 'application/json; charset=utf-8' }}
+    { headers: {
+      'content-type': 'application/json; charset=utf-8',
+      // 신원 응답은 공용 캐시(CF Pages 엣지 포함)에 남기지 않는다.
+      'cache-control': 'no-store',
+    }}
   );
 }

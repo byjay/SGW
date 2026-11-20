@@ -1,15 +1,21 @@
-/* Seastar GW — Sidepanel v2.0.0 */
+/* Seastar GW — Sidepanel v2.0.0
+   주 화면 = 그룹웨어 "모바일 웹"을 iframe(?embed=ext)으로 그대로 임베드.
+   확장 고유 UI(연결 상태·지금 업데이트)만 얇은 상단/하단 바로 유지한다. */
 import { storage, KEYS, DEFAULTS } from '../lib/storage.js';
 
 let _uiAttached = false; // 이중 등록 방지
 
 let state = {
   empNum: null, empName: null, token: null, authAt: 0,
-  counts: { notice: 0, leave: 0, message: 0, approval: 0 },
-  activities: [],
   gwHost: DEFAULTS.gw_host,
   sedmsHost: DEFAULTS.sedms_host
 };
+
+/* ── 그룹웨어 모바일 웹 임베드 URL (?embed=ext 부착 → 웹이 확장임베드로 인식) ── */
+function embedUrl(path) {
+  const base = state.gwHost + (path || '/');
+  return base + (base.includes('?') ? '&' : '?') + 'embed=ext';
+}
 
 /* ── 버전 비교 ── */
 function compareVer(a, b) {
@@ -46,7 +52,7 @@ async function init() {
     showUpdateStatus(txt, newer, serverVer);
   }
 
-  // 폴링 요청 (SW에게)
+  // 폴링 요청 (SW에게) — OS 알림은 계속 동작
   chrome.runtime.sendMessage({ type: 'SWGS_TRIGGER_POLL' }).catch(() => {});
   setTimeout(checkSgwTab, 1500);
   setInterval(checkSgwTab, 30000);
@@ -63,7 +69,7 @@ async function onAuthUpdated() {
   chrome.runtime.sendMessage({ type: 'SWGS_TRIGGER_POLL' }).catch(() => {});
 }
 
-/* ── SGW 탭 상태 표시 ── */
+/* ── SGW 탭/임베드 연결 상태 표시 (상단바 sub) ── */
 async function checkSgwTab() {
   try {
     const tabs = await chrome.tabs.query({ url: state.gwHost + '/*' });
@@ -83,7 +89,7 @@ function showLogin() {
   // ★ 그룹웨어 실제 로그인 페이지를 그대로 내장 — 여기서 한 번만 로그인하면
   //   auth-bridge(all_frames)가 즉시 감지해 자동으로 메인 화면(showApp)으로 전환된다.
   const lf = document.getElementById('loginFrame');
-  if (lf && (!lf.src || lf.src === 'about:blank')) lf.src = state.gwHost + '/';
+  if (lf && (!lf.src || lf.src === 'about:blank')) lf.src = embedUrl('/');
 }
 function showApp() {
   document.getElementById('loginScreen').style.display = 'none';
@@ -93,14 +99,14 @@ function showApp() {
   if (ui) ui.textContent = (state.empName || state.userEmail || '로그인됨') + (state.userEmail ? ' · ' + state.userEmail : '');
   const cv = document.getElementById('curVer');
   if (cv) cv.textContent = 'v' + chrome.runtime.getManifest().version;
-  loadAppFrame(); // ★ 앱 탭(기본)에 그룹웨어 로드
+  loadAppFrame(); // ★ 그룹웨어 모바일 웹 로드
 }
 
-/* ── 앱 탭: 그룹웨어 iframe (어플 구조) ── */
+/* ── 주 화면: 그룹웨어 모바일 웹 iframe ── */
 function loadAppFrame(path) {
   const fr = document.getElementById('appFrame');
   if (!fr) return;
-  const want = state.gwHost + (path || '/');
+  const want = embedUrl(path);
   if (path || !fr.src || fr.src === 'about:blank') fr.src = want;
 }
 
@@ -121,7 +127,7 @@ async function doLogout() {
   showLogin();
   // 로그인 화면도 강제 새로고침 — 캐시된 로그인 상태가 그대로 보이는 것 방지
   const lf = document.getElementById('loginFrame');
-  if (lf) lf.src = state.gwHost + '/?_lo=' + Date.now();
+  if (lf) lf.src = embedUrl('/') + '&_lo=' + Date.now();
   toast('로그아웃 완료', 'green');
 }
 
@@ -134,48 +140,6 @@ async function closeSidepanel() {
     }
   } catch(e) {}
   try { window.close(); } catch(e) {}
-}
-
-/* ── 카운트/활동 렌더 ── */
-function updateCounts() {
-  ['notice','leave','message','approval'].forEach(k => {
-    const el = document.getElementById('cnt' + k.charAt(0).toUpperCase() + k.slice(1));
-    if (el) el.textContent = state.counts[k]||0;
-  });
-  const total = Object.values(state.counts).reduce((a,b)=>a+b, 0);
-  const badge = document.getElementById('badgeAll');
-  if (badge) { badge.textContent=total; badge.dataset.zero = total===0?'true':'false'; }
-}
-
-function renderActivities() {
-  const list = document.getElementById('activityList');
-  if (!list) return;
-  list.innerHTML = '';
-  if (!state.activities.length) { list.innerHTML='<div class="empty">📭 최근 활동 없음</div>'; return; }
-  state.activities.slice(0,20).forEach(a => {
-    const item = document.createElement('div'); item.className='item';
-    const icon = ({notice:'📢',leave:'🌴',message:'💬',approval:'✍️'})[a.kind]||'📌';
-    const head = a.kind==='message'&&a.sender
-      ? `${icon} <strong>${a.sender}</strong>님의 새 쪽지`
-      : `${icon} ${a.title||a.from||'활동'}`;
-    item.innerHTML = `<div class="head">${head}</div><div class="body">${(a.content||a.body||'').slice(0,80)}</div>`;
-    item.onclick = ()=>openLink(a.kind);
-    list.appendChild(item);
-  });
-}
-
-function openLink(kind) {
-  if (kind === 'message') { openMessengerPopup(state.gwHost + '/messages'); return; }
-  const path = ({notice:'/board',leave:'/leave',approval:'/approval'})[kind]||'/';
-  openGwTab(state.gwHost + path);
-}
-
-/* ── 메신저 팝업 창 (로그인 사용자용) ── */
-function openMessengerPopup(url) {
-  try {
-    chrome.windows.create({ url, type: 'popup', width: 460, height: 760, focused: true })
-      .catch(() => chrome.tabs.create({ url }));
-  } catch (e) { chrome.tabs.create({ url }); }
 }
 
 /* ── 그룹웨어 탭 재사용 — 메뉴 클릭마다 새 탭이 계속 쌓이고 그때마다
@@ -225,13 +189,20 @@ function attachUI() {
 
   // 로그인 화면 (내장 iframe) 툴바
   const blr = document.getElementById('btnLoginReload');
-  if (blr) blr.onclick = ()=>{ const f=document.getElementById('loginFrame'); if (f) f.src = state.gwHost + '/?_r=' + Date.now(); };
+  if (blr) blr.onclick = ()=>{ const f=document.getElementById('loginFrame'); if (f) f.src = embedUrl('/') + '&_r=' + Date.now(); };
   const bgw = document.getElementById('btnOpenGW');
   if (bgw) bgw.onclick = ()=>{ openGwTab(state.gwHost); toast('🌐 브라우저 탭에서 열림', 'green'); };
 
-  // 헤더
+  // 상단바
   const br = document.getElementById('btnRefresh');
-  if (br) br.onclick = ()=>{ chrome.runtime.sendMessage({ type:'SWGS_TRIGGER_POLL' }).catch(()=>{}); toast('🔄 새로고침', 'green'); };
+  if (br) br.onclick = ()=>{
+    const fr = document.getElementById('appFrame');
+    if (fr && fr.src) fr.src = fr.src;                       // 모바일 웹 새로고침
+    chrome.runtime.sendMessage({ type:'SWGS_TRIGGER_POLL' }).catch(()=>{});
+    toast('🔄 새로고침', 'green');
+  };
+  const bof = document.getElementById('btnOpenFull');
+  if (bof) bof.onclick = ()=>{ openGwTab(state.gwHost + '/'); toast('🌐 브라우저 탭에서 열림', 'green'); };
   const bl = document.getElementById('btnLogout');
   if (bl) bl.onclick = doLogout;
   const bc = document.getElementById('btnCloseSide');
@@ -246,50 +217,6 @@ function attachUI() {
     toast('🔄 업데이트 확인 중...', 'green');
   };
 
-  // 탭 전환
-  document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>{
-    document.querySelectorAll('.tab-btn').forEach(x=>x.classList.toggle('active',x===b));
-    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.dataset.tab===b.dataset.tab));
-    if (b.dataset.tab==='app')   loadAppFrame();
-  });
-
-  // 앱 탭 툴바
-  const fr = document.getElementById('appFrame');
-  const fb = document.getElementById('btnFrameBack');
-  if (fb) fb.onclick = ()=>{ try { fr.contentWindow.history.back(); } catch(e) { loadAppFrame('/'); } };
-  const fh = document.getElementById('btnFrameHome');
-  if (fh) fh.onclick = ()=>loadAppFrame('/');
-  const fre = document.getElementById('btnFrameReload');
-  if (fre) fre.onclick = ()=>{ if (fr && fr.src) fr.src = fr.src; };
-  const bof = document.getElementById('btnOpenFull');
-  if (bof) bof.onclick = ()=>{ openGwTab((fr && fr.src && fr.src !== 'about:blank') ? fr.src : state.gwHost); toast('🗖 전체 페이지로 이동', 'green'); };
-
-  // 메뉴 카드
-  document.querySelectorAll('.menu-card').forEach(card=>{
-    card.onclick=()=>{
-      const path=card.dataset.go; const isExt=card.dataset.ext==='1'; const isPopup=card.dataset.popup==='1';
-      const url = isExt ? path : (state.gwHost + path);
-      const label = card.querySelector('.ml')?.textContent||'';
-      if (isPopup) { openMessengerPopup(url); toast(`💬 ${label} 팝업 열기`, 'green'); }
-      else if (isExt) { chrome.tabs.create({ url }); toast(`🌐 ${label} 열기`, 'green'); }
-      else { openGwTab(url); toast(`🌐 ${label} 열기`, 'green'); }
-    };
-  });
-
-  // 💬 메신저 팝업 버튼
-  const bmsg = document.getElementById('btnMessenger');
-  if (bmsg) bmsg.onclick = ()=>{ openMessengerPopup(state.gwHost+'/messages'); toast('💬 메신저 팝업 열기','green'); };
-
-  const bgh = document.getElementById('btnGoHome');
-  if (bgh) bgh.onclick = ()=>openGwTab(state.gwHost+'/');
-  const bra = document.getElementById('btnRefreshAll');
-  if (bra) bra.onclick = ()=>{ chrome.runtime.sendMessage({ type:'SWGS_TRIGGER_POLL' }).catch(()=>{}); toast('🔄 알림 갱신','green'); };
-
-  // 카운트 카드 클릭
-  document.querySelectorAll('.cnt-card').forEach(c=>{
-    c.onclick = ()=>openLink(c.classList.contains('msg')?'message':Array.from(c.classList).find(cl=>['notice','leave','approval'].includes(cl))||'notice');
-  });
-
   // options 페이지
   const oo = document.getElementById('openOptions');
   if (oo) oo.onclick = (e)=>{ e.preventDefault(); chrome.runtime.openOptionsPage?.().catch(()=>{}); };
@@ -299,14 +226,6 @@ function attachUI() {
 chrome.runtime.onMessage.addListener((msg)=>{
   if (!msg||!msg.type) return;
   switch(msg.type) {
-    case 'SWGS_NEW_ACTIVITY':
-      state.counts[msg.kind] = (state.counts[msg.kind]||0)+msg.count;
-      if (msg.items) state.activities.unshift(...msg.items.map(it=>({...it, kind:msg.kind})));
-      state.activities = state.activities.slice(0,50);
-      updateCounts(); renderActivities(); break;
-    case 'SWGS_COUNTS_UPDATE':
-      Object.assign(state.counts, msg.counts);
-      updateCounts(); break;
     case 'SWGS_AUTH_UPDATED':
       onAuthUpdated(); // ★ init() 재실행 금지 — 이중 attachUI 방지
       break;

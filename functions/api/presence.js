@@ -9,16 +9,12 @@ const json = (obj, status = 200) =>
     headers: { 'Content-Type': 'application/json' },
   });
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, data }) {
   try {
     if (!env || !env.DB) return json({ ok: false }, 500);
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      body = null;
-    }
-    const userId = body && body.userId != null ? String(body.userId) : '';
+    // 하트비트는 토큰 신원(sub)으로 강제.
+    const user = data && data.user;
+    const userId = user && user.sub ? String(user.sub) : '';
     if (!userId) return json({ ok: false, error: 'userId required' }, 400);
 
     const now = Date.now();
@@ -34,15 +30,18 @@ export async function onRequestPost({ request, env }) {
   }
 }
 
-export async function onRequestGet({ request, env }) {
+export async function onRequestGet({ request, env, data }) {
   try {
     if (!env || !env.DB) return json({ online: [] }, 500);
     const url = new URL(request.url);
     const logoutId = url.searchParams.get('logout');
 
     if (logoutId) {
+      // 본인만 로그아웃(온라인 목록 제거) 가능 — 토큰 신원(sub)으로 강제.
+      const user = data && data.user;
+      const uid = user && user.sub ? String(user.sub) : '';
       await env.DB.prepare('DELETE FROM presence WHERE user_id = ?')
-        .bind(String(logoutId))
+        .bind(uid || String(logoutId))
         .run();
       return json({ ok: true });
     }
@@ -57,6 +56,6 @@ export async function onRequestGet({ request, env }) {
     const online = (res.results || []).map((r) => String(r.user_id));
     return json({ online });
   } catch (e) {
-    return json({ online: [] }, 500);
+    return json({ online: [], error: 'db_error' }, 500);
   }
 }

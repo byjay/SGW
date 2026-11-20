@@ -8,11 +8,11 @@
 import { clearAuthCookie } from '../_lib/social-auth.js';
 
 export async function onRequestGet({ env }) {
-  return new Response(null, {
-    status  : 302,
-    headers : {
-      location     : env.AUTH_LOGOUT_URL || '/',
-      'set-cookie' : clearAuthCookie(env.AUTH_COOKIE || 'auth_sess'),
-    },
-  });
+  // ★ 세션 쿠키가 두 종류다: auth_sess(구글 폴백 모드)와 at(/api/auth/login·RS256 모드).
+  //   하나만 지우면 로그아웃해도 나머지 쿠키로 계속 인증된다(rbac.readAuth 가 둘 다 본다).
+  const headers = new Headers({ location: env.AUTH_LOGOUT_URL || '/' });
+  headers.append('set-cookie', clearAuthCookie(env.AUTH_COOKIE || 'auth_sess'));
+  headers.append('set-cookie', clearAuthCookie(env.ACCESS_COOKIE || 'at'));
+  headers.append('set-cookie', clearAuthCookie(env.REFRESH_COOKIE || 'rt'));
+  return new Response(null, { status: 302, headers });
 }

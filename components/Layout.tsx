@@ -2,6 +2,19 @@ import React from 'react';
 import { User, ViewState } from '../types';
 import { LogOut, LayoutGrid, MessageSquare, MessageCircle, Menu, X, Calendar, Shield, FileCheck, Home, Calendar as CalendarIcon, Mail, ExternalLink, Archive, Layers, Key, Camera, Save, UserCog, Sun, Moon, Link2 } from 'lucide-react';
 import logoImage from '../logo.jpg';
+import { detectAppEnv, AppEnv } from '../constants/appConfig';
+
+// 접속 환경(데스크탑/모바일/확장임베드)을 리액티브하게 추적 — 리사이즈 시 재평가.
+function useAppEnv(): AppEnv {
+  const [env, setEnv] = React.useState<AppEnv>(() => detectAppEnv());
+  React.useEffect(() => {
+    const update = () => setEnv(detectAppEnv());
+    window.addEventListener('resize', update);
+    update();
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return env;
+}
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -42,6 +55,11 @@ export const Layout: React.FC<LayoutProps> = ({
   const [profileDept, setProfileDept] = React.useState('');
   const [avatarData, setAvatarData] = React.useState('');
   const [savingProfile, setSavingProfile] = React.useState(false);
+
+  // ── 접속 환경 3분류: 데스크탑=사이드바 / 모바일·확장임베드=모바일 레이아웃 강제 ──
+  const env = useAppEnv();
+  const mobileLayout = env !== 'desktop';   // 하단네비 + MobileHome 강제
+  const extEmbed = env === 'ext-embed';       // 확장 사이드패널 내부(좁은 폭) — 중복 크롬 최소화
 
   if (!currentUser) {
     return <div className="min-h-screen">{children}</div>;
@@ -203,14 +221,14 @@ export const Layout: React.FC<LayoutProps> = ({
       <button
         onClick={() => setTheme(t => (t === 'dark' ? 'cream' : 'dark'))}
         title={theme === 'dark' ? '크림 테마로 전환' : '다크 테마로 전환'}
-        className="fixed top-3 right-3 z-[60] w-9 h-9 rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center text-slate-500 hover:scale-110 transition-transform"
+        className={`fixed ${extEmbed ? 'top-2 right-2 w-8 h-8' : 'top-3 right-3 w-9 h-9'} z-[60] rounded-full bg-white border border-slate-200 shadow-md flex items-center justify-center text-slate-500 hover:scale-110 transition-transform`}
       >
         {theme === 'dark' ? <Sun size={17} className="text-amber-500" /> : <Moon size={17} className="text-indigo-500" />}
       </button>
       {/* Mobile Bottom Navigation Bar - Placed at top for priority rendering */}
       {/* ★ 모바일 전 기능 접근 (2026-07-09): 핵심 5탭 + 전체(더보기 = 햄버거 오버레이) */}
       {currentUser && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.2)] z-[9999]">
+        <nav className={`${env === 'desktop' ? 'md:hidden ' : ''}fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.2)] z-[9999]`}>
           <div className="flex items-stretch justify-around h-16 px-1">
             <button
               onClick={() => onNavigate('home')}
@@ -262,7 +280,7 @@ export const Layout: React.FC<LayoutProps> = ({
       )}
 
       {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-6 fixed h-full z-10 overflow-y-auto">
+      <aside className={`${mobileLayout ? 'hidden' : 'hidden md:flex'} flex-col w-64 bg-white border-r border-slate-200 p-6 fixed h-full z-10 overflow-y-auto`}>
         <div className="flex items-center mb-10 px-2 cursor-pointer" onClick={() => onNavigate('home')}>
           <div className="bg-white keep-white rounded-xl px-3 py-2 w-full">
             <img src={logoImage} alt="SEASTAR Logo" className="w-full max-w-[200px] h-auto object-contain" />
@@ -351,8 +369,8 @@ export const Layout: React.FC<LayoutProps> = ({
         </div>
       </aside>
 
-      {/* Mobile Header */}
-      <div className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+      {/* Mobile Header — 확장 임베드에서는 확장 자체 상단바가 있어 중복이므로 숨김 */}
+      <div className={`${extEmbed ? 'hidden ' : 'md:hidden '}bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-20 shadow-sm`}>
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => onNavigate('home')}>
           <div className="bg-white keep-white rounded-lg px-2 py-1">
             <img src={logoImage} alt="SEASTAR Logo" className="h-8 w-auto object-contain" />
@@ -454,7 +472,7 @@ export const Layout: React.FC<LayoutProps> = ({
       )}
 
       {/* Main Content Area */}
-      <main className={`flex-1 md:ml-64 p-4 md:p-8 overflow-y-auto ${currentUser ? 'pb-24' : ''} h-[calc(100vh-64px)] md:h-screen bg-slate-50/50`}>
+      <main className={`flex-1 ${mobileLayout ? '' : 'md:ml-64'} p-4 md:p-8 overflow-y-auto ${currentUser ? 'pb-24' : ''} ${extEmbed ? 'h-[100dvh]' : mobileLayout ? 'h-[calc(100vh-64px)]' : 'h-[calc(100vh-64px)] md:h-screen'} bg-slate-50/50`}>
         <div className="max-w-7xl mx-auto h-full">
           {children}
         </div>

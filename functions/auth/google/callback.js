@@ -113,11 +113,14 @@ export async function onRequestGet({ request, env }) {
       await touchLastLogin(env, sub);
     }
 
-    if (dbUser?.status === 'pending') {
-      return Response.redirect(`${origin}${env.PENDING_URL || '/pending'}`, 302);
-    }
     if (dbUser?.status === 'rejected') {
       return Response.redirect(`${origin}/?auth_error=rejected`, 302);
+    }
+    // ★ fail-closed 승인 게이트: 'approved' 가 확인된 계정만 세션을 받는다.
+    //   (기존엔 DB 미연결·레코드 없음이면 status 가 undefined 라 승인 검사를 통과했다
+    //    → 아무 구글 계정이나 role 'viewer' 세션을 발급받는 우회 경로)
+    if (dbUser?.status !== 'approved') {
+      return Response.redirect(`${origin}${env.PENDING_URL || '/pending'}`, 302);
     }
 
     const userClaims = {
@@ -155,8 +158,15 @@ export async function onRequestGet({ request, env }) {
       if (refreshToken)
         headers.append('set-cookie', setRefreshCookie(refreshToken, env.REFRESH_COOKIE || 'rt', env.COOKIE_DOMAIN));
     } else {
+      // ★ fail-closed: 공개 기본값('CHANGE_ME')으로 세션을 서명하면 누구나 토큰을 위조할 수 있다.
+      //   시크릿이 없으면 세션을 발급하지 않고 설정 오류로 되돌린다.
+      if (!env.JWT_SECRET) {
+        await writeAudit(env, { event: 'auth.misconfigured', severity: 'CRITICAL',
+          meta: { provider: 'google', missing: 'JWT_SECRET' } });
+        return Response.redirect(`${origin}/?auth_error=server_misconfigured`, 302);
+      }
       const ttl = Number(env.JWT_TTL_SEC || 604800);
-      const jwt = await jwtSign(userClaims, env.JWT_SECRET || 'CHANGE_ME', ttl);
+      const jwt = await jwtSign(userClaims, env.JWT_SECRET, ttl);
       headers.append('set-cookie', setAuthCookie(jwt, env.AUTH_COOKIE || 'auth_sess', ttl));
     }
 

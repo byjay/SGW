@@ -75,7 +75,10 @@ export function getCookie(req, name) {
  */
 export async function requireAuth(request, env) {
   const cookieName = env.AUTH_COOKIE || 'auth_sess';
-  const secret     = env.JWT_SECRET  || 'CHANGE_ME';
+  // ★ fail-closed: JWT_SECRET 미설정 시 'CHANGE_ME' 같은 공개 기본값으로 검증하면
+  //   누구나 유효한 세션 토큰을 위조할 수 있다. 시크릿이 없으면 인증 자체를 거부한다.
+  const secret     = env.JWT_SECRET;
+  if (!secret) return null;
   const token      = getCookie(request, cookieName);
   if (!token) return null;
   return jwtVerify(token, secret);

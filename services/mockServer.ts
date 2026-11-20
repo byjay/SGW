@@ -585,13 +585,28 @@ export const MockServer = {
   },
 
   getPosts: async (): Promise<Post[]> => {
-    await delay(400);
-    const posts = JSON.parse(localStorage.getItem(STORAGE_KEYS.POSTS) || '[]');
-    return posts.sort((a: Post, b: Post) => {
+    const sortPosts = (posts: Post[]) => posts.sort((a: Post, b: Post) => {
       if (a.type === 'notice' && b.type !== 'notice') return -1;
       if (a.type !== 'notice' && b.type === 'notice') return 1;
       return b.timestamp - a.timestamp;
     });
+    // 서버(D1) 우선 — 성공 시 서버 데이터 반환 + localStorage 미러링
+    try {
+      const res = await fetch('/api/board');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.posts)) {
+          const server: Post[] = data.posts;
+          mirrorLocal(STORAGE_KEYS.POSTS, server);
+          return sortPosts(server);
+        }
+      }
+      throw new Error('board fetch failed');
+    } catch {
+      await delay(400);
+      const posts = JSON.parse(localStorage.getItem(STORAGE_KEYS.POSTS) || '[]');
+      return sortPosts(posts);
+    }
   },
 
   createPost: async (author: User, title: string, content: string, type: 'notice' | 'normal' = 'normal'): Promise<Post> => {
@@ -608,6 +623,15 @@ export const MockServer = {
       type,
       comments: []
     };
+    // 서버(D1) 우선 — best-effort (실패해도 localStorage 폴백 유지)
+    try {
+      await fetch('/api/board', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPost),
+      });
+    } catch { /* ignore */ }
+
     posts.unshift(newPost);
     localStorage.setItem(STORAGE_KEYS.POSTS, JSON.stringify(posts));
     await MockServer.logActivity(author.id, author.name, '게시글 작성', `[${type}] ${title}`);
@@ -628,6 +652,15 @@ export const MockServer = {
       content,
       timestamp: Date.now()
     };
+
+    // 서버(D1) 우선 — best-effort
+    try {
+      await fetch('/api/board?action=comment&postId=' + encodeURIComponent(postId), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newComment),
+      });
+    } catch { /* ignore */ }
 
     posts[postIndex].comments.push(newComment);
     localStorage.setItem(STORAGE_KEYS.POSTS, JSON.stringify(posts));
@@ -753,9 +786,23 @@ export const MockServer = {
 
   // Leave Management Methods
   getLeaveRequests: async (userId?: string): Promise<LeaveRequest[]> => {
-    await delay(300);
-    const allRequests: LeaveRequest[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_REQUESTS) || '[]');
-    return allRequests.sort((a, b) => b.requestDate - a.requestDate);
+    // 서버(D1) 우선 — 성공 시 전체 목록 반환 + localStorage 미러링 (userId는 컴포넌트에서 클라 필터)
+    try {
+      const res = await fetch('/api/leave');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.requests)) {
+          const server: LeaveRequest[] = data.requests;
+          mirrorLocal(STORAGE_KEYS.LEAVE_REQUESTS, server);
+          return server.sort((a, b) => b.requestDate - a.requestDate);
+        }
+      }
+      throw new Error('leave fetch failed');
+    } catch {
+      await delay(300);
+      const allRequests: LeaveRequest[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_REQUESTS) || '[]');
+      return allRequests.sort((a, b) => b.requestDate - a.requestDate);
+    }
   },
 
   getTodayLeaveRequests: async (): Promise<LeaveRequest[]> => {
@@ -838,6 +885,15 @@ export const MockServer = {
       }
     }
 
+    // 서버(D1) 우선 — best-effort (실패해도 localStorage 폴백 유지)
+    try {
+      await fetch('/api/leave', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newRequest),
+      });
+    } catch { /* ignore */ }
+
     requests.unshift(newRequest);
     localStorage.setItem(STORAGE_KEYS.LEAVE_REQUESTS, JSON.stringify(requests));
 
@@ -855,6 +911,10 @@ export const MockServer = {
   },
 
   approveLeaveRequest: async (requestId: string, status: 'approved' | 'rejected'): Promise<void> => {
+    // 서버(D1) — best-effort
+    try {
+      await fetch('/api/leave?action=approve&id=' + encodeURIComponent(requestId) + '&status=' + encodeURIComponent(status), { method: 'POST' });
+    } catch { /* ignore */ }
     const requests: LeaveRequest[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_REQUESTS) || '[]');
     const users: User[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
 
@@ -919,6 +979,18 @@ export const MockServer = {
 
     localStorage.setItem(STORAGE_KEYS.LEAVE_REQUESTS, JSON.stringify(updatedRequests));
 
+    // 서버(D1) — best-effort: 병합된 최종 레코드 필드를 서버에 반영
+    try {
+      const merged = updatedRequests.find(r => r.id === requestId);
+      if (merged) {
+        await fetch('/api/leave?action=update&id=' + encodeURIComponent(requestId), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(merged),
+        });
+      }
+    } catch { /* ignore */ }
+
     // Adjust leave balance if days changed and it was auto-approved/approved
     if (updates.days !== undefined && oldDays !== updates.days && targetUserId) {
       const idx = updatedRequests.findIndex(r => r.id === requestId);
@@ -945,6 +1017,10 @@ export const MockServer = {
 
     // Kim Bong-jeong (5) or Lee Seon-woo (2) can delete directly, or same-day deletion
     if (isManager || isToday) {
+      // 서버(D1) — best-effort 삭제
+      try {
+        await fetch('/api/leave?action=delete&id=' + encodeURIComponent(requestId), { method: 'POST' });
+      } catch { /* ignore */ }
       const updatedRequests = requests.filter(r => r.id !== requestId);
       localStorage.setItem(STORAGE_KEYS.LEAVE_REQUESTS, JSON.stringify(updatedRequests));
 
@@ -974,14 +1050,33 @@ export const MockServer = {
     });
 
     localStorage.setItem(STORAGE_KEYS.LEAVE_REQUESTS, JSON.stringify(updatedRequests));
+
+    // 서버(D1) — best-effort: 삭제요청 상태 반영
+    try {
+      await fetch('/api/leave?action=approve&id=' + encodeURIComponent(requestId) + '&status=pending_delete', { method: 'POST' });
+    } catch { /* ignore */ }
   },
 
   getApprovals: async (userId: string): Promise<Approval[]> => {
-    await delay(300);
-    const approvals: Approval[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPROVALS) || '[]');
-    return approvals
-      .filter(a => a.requesterId === userId || a.approverId === userId)
-      .sort((a, b) => b.updatedAt - a.updatedAt);
+    // 서버(D1) 우선 — 본인 상신/결재분 반환 + localStorage 미러링
+    try {
+      const res = await fetch('/api/approvals?userId=' + encodeURIComponent(userId));
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.approvals)) {
+          const server: Approval[] = data.approvals;
+          mirrorLocal(STORAGE_KEYS.APPROVALS, server);
+          return server.sort((a, b) => b.updatedAt - a.updatedAt);
+        }
+      }
+      throw new Error('approvals fetch failed');
+    } catch {
+      await delay(300);
+      const approvals: Approval[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPROVALS) || '[]');
+      return approvals
+        .filter(a => a.requesterId === userId || a.approverId === userId)
+        .sort((a, b) => b.updatedAt - a.updatedAt);
+    }
   },
 
   createApproval: async (requester: User, approverId: string, title: string, content: string, status: 'draft' | 'pending', attachment?: string): Promise<Approval> => {
@@ -1006,12 +1101,25 @@ export const MockServer = {
       updatedAt: Date.now()
     };
 
+    // 서버(D1) 우선 — best-effort
+    try {
+      await fetch('/api/approvals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newApproval),
+      });
+    } catch { /* ignore */ }
+
     approvals.unshift(newApproval);
     localStorage.setItem(STORAGE_KEYS.APPROVALS, JSON.stringify(approvals));
     return newApproval;
   },
 
   updateApprovalStatus: async (approvalId: string, status: 'approved' | 'rejected'): Promise<void> => {
+    // 서버(D1) — best-effort
+    try {
+      await fetch('/api/approvals?action=decide&id=' + encodeURIComponent(approvalId) + '&status=' + encodeURIComponent(status), { method: 'POST' });
+    } catch { /* ignore */ }
     await delay(300);
     let approvals: Approval[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.APPROVALS) || '[]');
     approvals = approvals.map(a => a.id === approvalId ? { ...a, status, updatedAt: Date.now() } : a);

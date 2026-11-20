@@ -36,6 +36,7 @@ export interface Post {
   timestamp: number;
   likes: number;
   type: 'notice' | 'normal';
+  category?: string; // 전체/인사/총무/IT/행사 등 (Batch4)
   comments: Comment[];
 }
 export interface Message {
@@ -96,6 +97,9 @@ export interface Approval {
   createdAt: number;
   updatedAt: number;
   attachment?: string; // Added attachment field
+  amount?: number; // 지출/구매 금액 (Batch4)
+  attachmentName?: string; // 첨부 파일명 (Batch4)
+  attachmentData?: string; // 첨부 base64 (Batch4)
 }
 
 export interface AttendanceLog {
